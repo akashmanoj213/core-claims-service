@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Cloud Run: Run/Debug Locally",
+            "type": "cloudcode.cloudrun",
+            "request": "launch",
+            "build": {
+                "docker": {
+                    "path": "Dockerfile",
+                    "buildArgs": {
+                        "PUBSUB_EMULATOR_HOST": "localhost:8085"
+                    }
+                }
+            },
+            "image": "core-claims-service",
+            "service": {
+                "name": "core-claims-service",
+                "containerPort": 8080,
+                "resources": {
+                    "limits": {
+                        "memory": "256Mi"
+                    }
+                }
+            },
+            "target": {
+                "minikube": {}
+            },
+            "watch": false
+        }
+    ]
+}
