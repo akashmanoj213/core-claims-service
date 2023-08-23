@@ -2,7 +2,7 @@ import { IsEmail, IsInt, IsString } from 'class-validator';
 
 export class HospitalDetailsDto {
   @IsInt()
-  hospitalId: number;
+  id: number;
   @IsString()
   hospitalName: string;
   @IsString()

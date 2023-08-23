@@ -12,7 +12,7 @@ import {
   PatientDeclarationDto,
 } from './declarations.dto';
 import { DoctorTreatmentDetailsDto } from './doctor-treatment-details.dto';
-import { HospitlDetailsDto } from './hospital-details.dto';
+import { HospitalDetailsDto } from './hospital-details.dto';
 import { MaternityDetailsDto } from './maternity-details.dto';
 import { PatientAdmissionDetailsDto } from './patient-admission-details.dto';
 import { Type } from 'class-transformer';
@@ -44,9 +44,9 @@ export class CreateClaimDto {
   @IsNotEmptyObject()
   memberDetails: MemberDetailsDto;
   @ValidateNested()
-  @Type(() => HospitlDetailsDto)
+  @Type(() => HospitalDetailsDto)
   @IsNotEmptyObject()
-  hospitalDetails: HospitlDetailsDto; // Check if hospital is in Network hospitals
+  hospitalDetails: HospitalDetailsDto; // Check if hospital is in Network hospitals
   @ValidateNested()
   @Type(() => DoctorTreatmentDetailsDto)
   @IsNotEmptyObject()

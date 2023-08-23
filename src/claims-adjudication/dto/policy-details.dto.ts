@@ -1,9 +1,17 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsDate, IsString, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsInt,
+  IsDate,
+  IsNumber,
+  IsString,
+  IsOptional,
+  ValidateNested,
+} from 'class-validator';
+import { MemberDetailsDto } from './member-details.dto';
 
 export class PolicyDetailsDto {
   @IsInt()
-  policyId: number;
+  id: number;
   @IsDate()
   @Type(() => Date)
   startDate: Date;
@@ -23,4 +31,7 @@ export class PolicyDetailsDto {
   policyWaitingPeriod: number;
   @IsInt()
   totalNumberOfClaims: number;
+  @ValidateNested()
+  @Type(() => MemberDetailsDto)
+  members: MemberDetailsDto[];
 }

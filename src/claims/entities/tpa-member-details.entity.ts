@@ -8,6 +8,12 @@ import {
 } from 'typeorm';
 import { Claim } from './claim.entity';
 
+enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
+}
+
 @Entity()
 export class TpaMemberDetails {
   @PrimaryGeneratedColumn()
@@ -24,6 +30,13 @@ export class TpaMemberDetails {
   sumInsured: number;
   @Column()
   contactNumber: string;
+  @Column()
+  fullName: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+  })
+  gender: Gender;
   @Column()
   email: string;
   @Column()

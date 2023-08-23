@@ -3,8 +3,6 @@ import {
   AdjudicationItem,
   AdjudicationItemStatus,
 } from './entities/adjudication-item.entity';
-import { PolicyDetails } from './entities/policy-details.entity';
-import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { CamundaClientService } from 'src/core/providers/camunda-client/camunda-client.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,16 +11,26 @@ import { NonMedicalFWAOutcomeDto } from 'src/core/dto/non-medical-fwa-outcome.dt
 import { NonMedicalAdjudicationResult } from './entities/non-medical-adjudication-result.entity';
 import { MedicalFWAOutcomeDto } from 'src/core/dto/medical-fwa-outcome.dto';
 import { MedicalAdjudicationResult } from './entities/medical-adjudication-result.entity';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { PolicyDetailsDto } from './dto/policy-details.dto';
+import { MemberDetails } from './entities/member-details.entity';
+import { MemberDetailsDto } from './dto/member-details.dto';
+import { HospitalDetailsDto } from './dto/hospital-details.dto';
+import { PolicyDetails } from './entities/policy-details.entity';
 
 @Injectable()
 export class ClaimsAdjudicationService {
-  readonly NON_MEDICAL_FWA_PROCESS_ID = 'nonMedicalFWAProcess';
-  readonly MEDICAL_FWA_PROCESS_ID = 'medicalFWAProcess';
+  private readonly NON_MEDICAL_FWA_PROCESS_ID = 'nonMedicalFWAProcess';
+  private readonly MEDICAL_FWA_PROCESS_ID = 'medicalFWAProcess';
+  private readonly MOCK_SERVICE_BASE_URL =
+    'https://mock-service-dnhiaxv6nq-el.a.run.app';
 
   constructor(
     @InjectRepository(AdjudicationItem, 'claims-adjudication')
     private adjudicationItemRepository: Repository<AdjudicationItem>,
     private camundaClientService: CamundaClientService,
+    private httpService: HttpService,
   ) {}
 
   async performNonMedicalFWA(adjudicationItem: AdjudicationItem) {
@@ -34,40 +42,41 @@ export class ClaimsAdjudicationService {
     } = adjudicationItem;
 
     // use the policy, hospital and member Id to call APIs of Policy service and get Policy and member level details
+    const policyServiceApi = firstValueFrom(
+      this.httpService.get(
+        `${this.MOCK_SERVICE_BASE_URL}/policy/${policyNumber}`,
+      ),
+    );
+    const hospitalServiceApi = firstValueFrom(
+      this.httpService.get(
+        `${this.MOCK_SERVICE_BASE_URL}/hospital/${hospitalId}`,
+      ),
+    );
+
+    const [{ data: policyDetailsData }, { data: hospitalDetailsData }] =
+      await Promise.all([policyServiceApi, hospitalServiceApi]);
+
+    const policyDetailsDto: PolicyDetailsDto = policyDetailsData;
+    const memberDetailsDto: MemberDetailsDto = policyDetailsDto.members.find(
+      (member) => member.id === insuranceCardNumber,
+    );
+    const hospitalDetailsDto: HospitalDetailsDto = hospitalDetailsData;
+
     const policyDetails = new PolicyDetails({
-      policyId: policyNumber,
-      sumInsured: 10000000.5, // FWA-params
-      startDate: new Date('01/01/2023'),
-      endDate: new Date('12/30/2023'),
-      policyBenefits: 'All Critical Illness',
-      policyDeductions: 0.0,
-      policyCapping: null,
-      policyWaitingPeriod: 0,
-      totalNumberOfClaims: 3, // FWA-params
+      ...policyDetailsDto,
+      policyId: policyDetailsDto.id,
+      id: null,
     });
-
     const memberDetails = new MemberDetails({
-      memberId: insuranceCardNumber,
-      policyId: policyNumber,
-      sumInsured: 10000000.5,
-      contactNumber: '9972976940',
-      email: 'akashmanoj213@gmail.com',
-      communicationPreference: 'whatsapp',
-      exclusions: 'NA',
-      memberBenefits: 'All Critical Illness',
-      memberDeductions: 0.0,
-      memberCapping: null,
-      memberWaitingPeriod: 0,
-      numberOfClaims: 0,
+      ...memberDetailsDto,
+      memberId: memberDetailsDto.id,
+      policyId: policyDetailsDto.id,
+      id: null,
     });
-
     const hospitalDetails = new HospitalDetails({
-      hospitalId: hospitalId,
-      hospitalName: 'Appolo Multi Speciality',
-      hospitalLocation: 'Bangalore',
-      hospitalEmailId: 'appolo-bangalore@gmail.com',
-      rohiniId: 12876,
-      hospitalPincode: '560037', // FWA-params
+      ...hospitalDetailsDto,
+      hospitalId: hospitalDetailsDto.id,
+      id: null,
     });
 
     adjudicationItem.policyDetails = policyDetails;

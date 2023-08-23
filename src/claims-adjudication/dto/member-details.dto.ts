@@ -16,7 +16,7 @@ enum Gender {
 
 export class MemberDetailsDto {
   @IsInt()
-  memberId: number;
+  id: number;
   @IsNumber()
   sumInsured: number;
   @IsMobilePhone('en-IN')

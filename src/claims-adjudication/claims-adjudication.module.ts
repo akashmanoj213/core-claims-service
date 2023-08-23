@@ -17,11 +17,13 @@ import { NonMedicalAdjudicationResult } from './entities/non-medical-adjudicatio
 import { VariationData } from './entities/variation-data.entity';
 import { AdjudicationItemDocument } from './entities/adjudication-item-document.entity';
 import { MedicalAdjudicationResult } from './entities/medical-adjudication-result.entity';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     PubSubModule,
     CamundaClientModule,
+    HttpModule,
     TypeOrmModule.forFeature(
       [
         AdjudicationItem,

@@ -3,11 +3,16 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { AdjudicationItem } from './adjudication-item.entity';
+
+export enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
+}
 
 @Entity()
 export class MemberDetails {
@@ -25,6 +30,13 @@ export class MemberDetails {
   sumInsured: number;
   @Column()
   contactNumber: string;
+  @Column()
+  fullName: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+  })
+  gender: Gender;
   @Column()
   email: string;
   @Column()
