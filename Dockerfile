@@ -1,7 +1,19 @@
-FROM node:16 As development
+FROM node:18
+
+# Create app directory
 WORKDIR /usr/src/app
+
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
-RUN npm ci --only=production
+
+# Install app dependencies
+RUN npm install
+
+# Bundle app source
 COPY . .
-EXPOSE 8080
-CMD ["node", "dist/main"]
+
+# Creates a "dist" folder with the production build
+RUN npm run build
+
+# Start the server using the production build
+CMD [ "node", "dist/main.js" ]
