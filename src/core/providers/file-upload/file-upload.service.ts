@@ -15,20 +15,32 @@ export class FileUploadService {
     file: Express.Multer.File,
     config = { params: null, headers: null },
   ): Promise<FileUploadResponseDto> {
-    const { buffer: fileBuffer } = file;
+    const {
+      buffer: fileBuffer,
+      originalname: filename,
+      mimetype: contentType,
+      fieldname,
+    } = file;
 
     const { params = null, headers = null } = config;
 
     const form = new FormData();
     form.append('document', fileBuffer, {
-      filename: file.originalname,
-      contentType: file.mimetype,
+      filename,
+      contentType,
     });
 
     const result = await lastValueFrom(
       this.httpService.post(this.documentServiceUrl, form, { params, headers }),
     );
 
-    return result.data;
+    const { message, fileUrl } = result.data;
+
+    return {
+      message,
+      fileUrl,
+      fieldName: fieldname,
+      fileName: filename,
+    };
   }
 }

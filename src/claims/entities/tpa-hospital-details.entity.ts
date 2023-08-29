@@ -28,6 +28,7 @@ export class TpaHospitalDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.tpaHospitalDetails)
   claimDetails: Claim;
 

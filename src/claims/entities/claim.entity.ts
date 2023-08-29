@@ -18,8 +18,8 @@ import { DoctorDeclaration } from './doctor-declaration.entity';
 import { HospitalDeclaration } from './hospital-declaration.entity';
 import { AccidentDetails } from './accident-details.entity';
 import { MaternityDetails } from './maternity-details.entity';
-import { ClaimItem } from './claim-item.entity';
-import { ClaimType } from 'src/core/enums';
+import { ClaimItem, ClaimItemStatus } from './claim-item.entity';
+import { ClaimItemType, ClaimType } from 'src/core/enums';
 
 export enum ClaimStatus {
   INITIATED = 'initiated',
@@ -173,18 +173,22 @@ export class Claim {
     Object.assign(this, init);
   }
 
-  addNewClaimItem(claimitem: ClaimItem) {
-    if (!(claimitem.totalAmount > 0)) {
+  addNewClaimItem(claimItem: ClaimItem) {
+    if (!(claimItem.totalAmount > 0)) {
       throw new Error('claimItem must have a positive claim amount');
     }
 
+    claimItem.claimItemStatus = ClaimItemStatus.INITIATED;
+
     if (this.claimItems && this.claimItems.length >= 0) {
-      this.claimItems.push(claimitem);
-      this.totalClaimAmount += claimitem.totalAmount;
+      claimItem.claimItemType = ClaimItemType.ENHANCEMENT;
+      this.claimItems.push(claimItem);
+      this.totalClaimAmount += claimItem.totalAmount;
     } else {
-      this.claimItems = [claimitem];
-      if (this.totalClaimAmount !== claimitem.totalAmount) {
-        this.totalClaimAmount = claimitem.totalAmount;
+      claimItem.claimItemType = ClaimItemType.INTIAL;
+      this.claimItems = [claimItem];
+      if (this.totalClaimAmount !== claimItem.totalAmount) {
+        this.totalClaimAmount = claimItem.totalAmount;
       }
     }
   }

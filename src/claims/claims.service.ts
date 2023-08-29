@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Claim, ClaimStatus } from './entities/claim.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { InitiatedClaimEventDto } from 'src/core/dto/initiated-claim-event.dto';
 import { ClaimItem, ClaimItemStatus } from './entities/claim-item.entity';
-import { ClaimItemType } from 'src/core/enums';
 import { NonMedicalFWAEventDto } from 'src/core/dto/non-medical-fwa-event.dto';
 import { NonMedicalAdjEventDto } from 'src/core/dto/non-medical-adj-event.dto';
 import { FileUploadService } from 'src/core/providers/file-upload/file-upload.service';
@@ -12,6 +10,7 @@ import { ClaimItemDocument } from './entities/claim-item-document.entity';
 import { MedicalAdjEventDto } from 'src/core/dto/medical-adj-event.dto';
 import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
 import { MedicalFWAEventDto } from 'src/core/dto/medical-fwa-event.dto';
+import { FileUploadResponseDto } from 'src/core/dto/file-upload-response.dto';
 
 @Injectable()
 export class ClaimsService {
@@ -27,14 +26,10 @@ export class ClaimsService {
     claim.claimStatus = ClaimStatus.INITIATED;
 
     const newClaimItem = new ClaimItem({
-      claimItemType: ClaimItemType.INTIAL,
-      claimItemStatus: ClaimItemStatus.INITIATED,
       totalAmount: claim.totalClaimAmount,
     });
 
     claim.addNewClaimItem(newClaimItem);
-
-    await this.claimRepository.save(claim);
 
     return claim;
   }
@@ -151,32 +146,32 @@ export class ClaimsService {
     await this.claimRepository.save(claim);
   }
 
-  async processDocumentUpload(claimItemId, files: Array<Express.Multer.File>) {
-    const claimItem = await this.claimItemRepository.findOneBy({
-      id: claimItemId,
+  async processDocumentUploads(files: Array<Express.Multer.File>) {
+    const promises: Promise<FileUploadResponseDto>[] = new Array<
+      Promise<FileUploadResponseDto>
+    >();
+
+    files.forEach((file) => {
+      promises.push(this.fileUploadService.uploadFile(file));
     });
 
-    const documents: ClaimItemDocument[] = [];
+    const documentResponses = new Map<string, ClaimItemDocument>();
 
-    for (const file of files) {
-      const { originalname: filename } = file;
-      const { fileUrl } = await this.fileUploadService.uploadFile(file);
+    const fileUploadResponses = await Promise.all(promises);
+
+    fileUploadResponses.forEach((fileUploadResponse) => {
+      const { fieldName, fileName, fileUrl, message } = fileUploadResponse;
 
       const document = new ClaimItemDocument({
-        filename,
+        fieldName,
+        fileName,
         fileUrl,
       });
 
-      documents.push(document);
-    }
+      documentResponses.set(fieldName, document);
+    });
 
-    claimItem.addDocuments(documents);
-
-    //save the documents
-    await this.claimItemRepository.save(claimItem);
-    console.log('Documents saved against claimItem...');
-
-    return claimItem;
+    return documentResponses;
   }
 
   findAll() {
@@ -239,6 +234,14 @@ export class ClaimsService {
         documents: true,
       },
     });
+  }
+
+  saveClaim(claim: Claim) {
+    return this.claimRepository.save(claim);
+  }
+
+  saveClaimItem(claimItem: ClaimItem) {
+    return this.claimItemRepository.save(claimItem);
   }
 
   remove(id: number) {

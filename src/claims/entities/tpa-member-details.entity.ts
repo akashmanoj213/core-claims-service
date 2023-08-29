@@ -67,6 +67,7 @@ export class TpaMemberDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.tpaMemberDetails)
   claimDetails: Claim;
 

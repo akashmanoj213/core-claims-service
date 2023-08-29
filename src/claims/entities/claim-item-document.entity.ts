@@ -13,7 +13,9 @@ export class ClaimItemDocument {
   @PrimaryGeneratedColumn()
   id?: number;
   @Column()
-  filename: string;
+  fileName: string;
+  @Column()
+  fieldName: string;
   @Column()
   fileUrl: string;
   @CreateDateColumn()

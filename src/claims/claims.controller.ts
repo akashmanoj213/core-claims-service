@@ -114,11 +114,13 @@ export class ClaimsController {
         claim.maternityDetails = maternityDetails;
       }
 
-      // save new claim
+      //initiate new claim
       const initiatedClaim = await this.claimsService.initiateClaim(claim);
+      // save new claim
+      const result = await this.claimsService.saveClaim(initiatedClaim);
       console.log('New claim request saved...');
 
-      return initiatedClaim;
+      return result;
     } catch (error) {
       throw new InternalServerErrorException('Failed to initiate claim !', {
         cause: error,
@@ -136,8 +138,28 @@ export class ClaimsController {
     try {
       // save document against claimItem
       console.log('Upload document API called!');
+
+      const fieldNames = [];
+
+      files.forEach((file) => {
+        fieldNames.push(file.fieldname);
+      });
+
+      this.validateDocumentsList(fieldNames);
+
+      const documentRespondePromise =
+        this.claimsService.processDocumentUploads(files);
+      const claimItemPromise = this.claimsService.findClaimItem(claimItemId);
+
+      const [documentResponse, claimItem] = await Promise.all([
+        documentRespondePromise,
+        claimItemPromise,
+      ]);
+
+      const documents = Array.from(documentResponse.values());
+      claimItem.addDocuments(documents);
       console.log('Saving documents...');
-      await this.claimsService.processDocumentUpload(claimItemId, files);
+      await this.claimsService.saveClaimItem(claimItem);
 
       const initiatedClaimEventDto = await this.prepareInitiatedClaimEventDto(
         claimItemId,
@@ -365,5 +387,26 @@ export class ClaimsController {
     }
 
     return initiatedClaimItemDto;
+  }
+
+  validateDocumentsList(fieldNames: Array<string>) {
+    console.log('Validating documents list...');
+
+    const validDocumentNames = ['medical-bill', 'doctor-prescription'];
+
+    if (!fieldNames || !fieldNames.length) {
+      throw new Error('Required documents missing : ' + validDocumentNames);
+    }
+
+    const missingDocumentNames = [];
+    validDocumentNames.forEach((validDocument) => {
+      if (!fieldNames.includes(validDocument)) {
+        missingDocumentNames.push(validDocument);
+      }
+    });
+
+    if (missingDocumentNames.length > 0) {
+      throw new Error('Required documents missing : ' + missingDocumentNames);
+    }
   }
 }

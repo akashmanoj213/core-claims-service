@@ -48,6 +48,7 @@ export class TpaPolicyDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.tpaPolicyDetails)
   claimDetails: Claim;
 

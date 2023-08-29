@@ -26,9 +26,11 @@ import { MaternityDetailsDto } from 'src/claims/dto/maternity-details.dto';
 
 export class ClaimItemDocumentDto {
   @IsString()
-  filename: string;
-  @IsString()
   fileUrl: string;
+  @IsString()
+  fileName: string;
+  @IsString()
+  fieldName: string;
 }
 
 export class InitiatedClaimEventDto {

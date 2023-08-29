@@ -5,4 +5,8 @@ export class FileUploadResponseDto {
   message: string;
   @IsString()
   fileUrl: string;
+  @IsString()
+  fieldName: string;
+  @IsString()
+  fileName: string;
 }
