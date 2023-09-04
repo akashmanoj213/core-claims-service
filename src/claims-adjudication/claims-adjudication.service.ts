@@ -264,8 +264,12 @@ export class ClaimsAdjudicationService {
         policyDetails: true,
         memberDetails: true,
         hospitalDetails: true,
-        nonMedicalAdjudicationResult: true,
-        medicalAdjudicationResult: true,
+        nonMedicalAdjudicationResult: {
+          variations: true,
+        },
+        medicalAdjudicationResult: {
+          variations: true,
+        },
       },
     });
   }
