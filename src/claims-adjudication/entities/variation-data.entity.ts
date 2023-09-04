@@ -12,14 +12,14 @@ export class VariationData {
   id?: number;
   @Column()
   fieldName: string;
-  @Column({
-    nullable: true,
-  })
-  originalStringValue?: string;
-  @Column({
-    nullable: true,
-  })
-  expectedStringValue?: string;
+  // @Column({
+  //   nullable: true,
+  // })
+  // originalStringValue?: string;
+  // @Column({
+  //   nullable: true,
+  // })
+  // expectedStringValue?: string;
   @Column({
     nullable: true,
   })

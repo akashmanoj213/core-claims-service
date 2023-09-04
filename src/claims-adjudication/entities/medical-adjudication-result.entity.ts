@@ -47,6 +47,7 @@ export class MedicalAdjudicationResult {
   @OneToMany(
     () => VariationData,
     (VariationData) => VariationData.adjudicationResult,
+    { cascade: true },
   )
   variations: VariationData[];
 
