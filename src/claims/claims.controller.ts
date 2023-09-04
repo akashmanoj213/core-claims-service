@@ -56,7 +56,6 @@ export class ClaimsController {
         policyNumber,
         hospitalId,
         totalClaimAmount,
-        contactNumber,
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         patientAdmissionDetails: patientAdmissionDetailsDto,
@@ -88,7 +87,8 @@ export class ClaimsController {
         tpaHospitalDetails = new TpaHospitalDetails(tpaHospitalDetailsDto),
         patientDeclaration = new PatientDeclaration(patientDeclarationDto),
         doctorDeclaration = new DoctorDeclaration(doctorDeclarationDto),
-        hospitalDeclaration = new HospitalDeclaration(hospitalDeclarationDto);
+        hospitalDeclaration = new HospitalDeclaration(hospitalDeclarationDto),
+        contactNumber = patientAdmissionDetailsDto.contactNumber;
 
       const claim = new Claim({
         tpaId,
@@ -448,7 +448,11 @@ export class ClaimsController {
   validateDocumentsList(fieldNames: Array<string>) {
     console.log('Validating documents list...');
 
-    const validDocumentNames = ['medical-bill', 'doctor-prescription'];
+    const validDocumentNames = [
+      'pre-authorization form',
+      'doctor-prescription',
+      'health-card',
+    ];
 
     if (!fieldNames || !fieldNames.length) {
       throw new Error('Required documents missing : ' + validDocumentNames);

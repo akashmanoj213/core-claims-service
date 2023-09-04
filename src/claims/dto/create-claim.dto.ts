@@ -32,8 +32,6 @@ export class CreateClaimDto {
   @IsInt()
   hospitalId: number;
   // claimStatus: ClaimStatus;
-  @IsString()
-  contactNumber: string;
   @IsEnum(ClaimType)
   claimType: ClaimType;
   @IsNumber()
