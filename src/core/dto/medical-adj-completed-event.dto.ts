@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { IsEnum, IsInt } from 'class-validator';
 import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
 
-export class MedicalAdjEventDto {
+export class MedicalAdjCompletedEventDto {
   @IsInt()
   claimItemId: number;
   @Type(() => Number)
@@ -12,7 +12,7 @@ export class MedicalAdjEventDto {
   @IsEnum(AdjudicationItemStatus)
   status: AdjudicationItemStatus;
 
-  constructor(init?: MedicalAdjEventDto) {
+  constructor(init?: MedicalAdjCompletedEventDto) {
     Object.assign(this, init);
   }
 }

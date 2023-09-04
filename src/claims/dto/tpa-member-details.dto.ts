@@ -16,9 +16,9 @@ enum Gender {
   OTHER = 'other',
 }
 
-export class MemberDetailsDto {
+export class TpaMemberDetailsDto {
   @IsInt()
-  id?: number;
+  memberId: number;
   @IsNumber()
   sumInsured: number;
   @IsMobilePhone('en-IN')
@@ -27,6 +27,12 @@ export class MemberDetailsDto {
   fullName: string;
   @IsEnum(Gender)
   gender: Gender;
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
   @IsEmail()
   email: string;
   @IsString()
@@ -44,10 +50,4 @@ export class MemberDetailsDto {
   memberWaitingPeriod: number;
   @IsInt()
   numberOfClaims: number;
-  @IsDate()
-  @Type(() => Date)
-  startDate: Date;
-  @IsDate()
-  @Type(() => Date)
-  endDate: Date;
 }

@@ -3,6 +3,7 @@ import {
   IsInt,
   IsNotEmptyObject,
   IsNumber,
+  IsString,
   ValidateNested,
 } from 'class-validator';
 import { AccidentDetailsDto } from './accident-details.dto';
@@ -12,12 +13,12 @@ import {
   PatientDeclarationDto,
 } from './declarations.dto';
 import { DoctorTreatmentDetailsDto } from './doctor-treatment-details.dto';
-import { HospitalDetailsDto } from './hospital-details.dto';
+import { TpaHospitalDetailsDto } from './tpa-hospital-details.dto';
 import { MaternityDetailsDto } from './maternity-details.dto';
 import { PatientAdmissionDetailsDto } from './patient-admission-details.dto';
 import { Type } from 'class-transformer';
-import { PolicyDetailsDto } from './policy-details.dto';
-import { MemberDetailsDto } from './member-details.dto';
+import { TpaPolicyDetailsDto } from './tpa-policy-details.dto';
+import { TpaMemberDetailsDto } from './tpa-member-details.dto';
 import { ClaimType } from 'src/core/enums';
 
 export class CreateClaimDto {
@@ -31,22 +32,24 @@ export class CreateClaimDto {
   @IsInt()
   hospitalId: number;
   // claimStatus: ClaimStatus;
+  @IsString()
+  contactNumber: string;
   @IsEnum(ClaimType)
   claimType: ClaimType;
   @IsNumber()
   totalClaimAmount: number;
   @ValidateNested()
-  @Type(() => PolicyDetailsDto)
+  @Type(() => TpaPolicyDetailsDto)
   @IsNotEmptyObject()
-  policyDetails: PolicyDetailsDto;
+  policyDetails: TpaPolicyDetailsDto;
   @ValidateNested()
-  @Type(() => MemberDetailsDto)
+  @Type(() => TpaMemberDetailsDto)
   @IsNotEmptyObject()
-  memberDetails: MemberDetailsDto;
+  memberDetails: TpaMemberDetailsDto;
   @ValidateNested()
-  @Type(() => HospitalDetailsDto)
+  @Type(() => TpaHospitalDetailsDto)
   @IsNotEmptyObject()
-  hospitalDetails: HospitalDetailsDto; // Check if hospital is in Network hospitals
+  hospitalDetails: TpaHospitalDetailsDto; // Check if hospital is in Network hospitals
   @ValidateNested()
   @Type(() => DoctorTreatmentDetailsDto)
   @IsNotEmptyObject()

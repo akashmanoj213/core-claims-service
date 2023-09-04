@@ -67,6 +67,7 @@ export class DoctorTreatmentDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.doctorTreatmentDetails)
   claimDetails: Claim;
 

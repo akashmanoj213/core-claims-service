@@ -12,7 +12,7 @@ import {
 import { ClaimsAdjudicationService } from './claims-adjudication.service';
 import { PubSubMessageDto } from 'src/core/dto/pub-sub-message.dto';
 import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
-import { InitiatedClaimEventDto } from 'src/core/dto/initiated-claim-event.dto';
+import { ClaimInitiatedEventDto } from 'src/core/dto/claim-initiated-event.dto';
 import {
   AdjudicationItem,
   AdjudicationItemStatus,
@@ -25,20 +25,22 @@ import { PastChronicIllness } from './entities/past-chronic-illness.entity';
 import { NonMedicalAdjudicationResultDto } from './dto/non-medical-adjudication-result.dto';
 import { NonMedicalAdjudicationResult } from './entities/non-medical-adjudication-result.entity';
 import { VariationData } from './entities/variation-data.entity';
-import { NonMedicalFWAEventDto } from 'src/core/dto/non-medical-fwa-event.dto';
-import { NonMedicalAdjEventDto } from 'src/core/dto/non-medical-adj-event.dto';
+import { NonMedicalFWACompletedEventDto } from 'src/core/dto/non-medical-fwa-completed-event.dto';
+import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-completed-event.dto';
 import { AdjudicationItemDocument } from './entities/adjudication-item-document.entity';
 import { MedicalAdjudicationResultDto } from './dto/medical-adjudication-result.dto';
-import { MedicalAdjEventDto } from 'src/core/dto/medical-adj-event.dto';
+import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-event.dto';
 import { MedicalAdjudicationResult } from './entities/medical-adjudication-result.entity';
-import { MedicalFWAEventDto } from 'src/core/dto/medical-fwa-event.dto';
+import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
+import { PolicyDetails } from './entities/policy-details.entity';
+import { MemberDetails } from './entities/member-details.entity';
+import { HospitalDetails } from './entities/hospital-details.entity';
 
 @Controller('claims-adjudication')
 export class ClaimsAdjudicationController {
   readonly NON_MEDICAL_FWA_COMPLETED_TOPIC = 'non-medical-fwa-completed';
   readonly NON_MEDICAL_ADJ_COMPLETED_TOPIC = 'non-medical-adj-completed';
   readonly MEDICAL_FWA_COMPLETED_TOPIC = 'medical-fwa-completed';
-
   readonly MEDICAL_ADJ_COMPLETED_TOPIC = 'medical-adj-completed';
 
   constructor(
@@ -46,15 +48,8 @@ export class ClaimsAdjudicationController {
     private pubSubService: PubSubService,
   ) {}
 
-  @Post('non-medical-fwa')
-  async dummyMethod(@Body() pubSubMessage: PubSubMessageDto) {
-    const {
-      message: { data },
-    } = pubSubMessage;
-  }
-
-  @Post('initiated-claims-handler') // initiated-claim-handler
-  async initiatedClaimsHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  @Post('claim-initiated-handler')
+  async claimInitiatedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
     console.log('initiated claims hanlder invoked...');
     try {
@@ -62,10 +57,10 @@ export class ClaimsAdjudicationController {
         message: { data },
       } = pubSubMessage;
 
-      const initiatedClaimItemDto =
-        this.pubSubService.formatMessageData<InitiatedClaimEventDto>(
+      const claimInitiatedEventDto =
+        this.pubSubService.formatMessageData<ClaimInitiatedEventDto>(
           data,
-          InitiatedClaimEventDto,
+          ClaimInitiatedEventDto,
         );
 
       const {
@@ -81,16 +76,20 @@ export class ClaimsAdjudicationController {
         claimItemId,
         claimItemTotalAmount,
         claimItemType,
+        policyDetails: eventPolicyDetails,
+        hospitalDetails: eventHospitalDetails,
+        memberDetails: eventMemberDetails,
         doctorTreatmentDetails: doctorTreatmentDetailsDto,
         patientAdmissionDetails: patientAdmissionDetailsDto,
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         documents: documentsDto,
-      } = initiatedClaimItemDto;
+      } = claimInitiatedEventDto;
 
       // need to convert the array inside from DTO to entity as well
       const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
         patientAdmissionDetailsDto;
+
       const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
         (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
       );
@@ -99,15 +98,27 @@ export class ClaimsAdjudicationController {
           new AdjudicationItemDocument(adjudicationitemDocument),
       );
 
-      const doctorTreatmentDetails = new DoctorTreatmentDetails(
-        doctorTreatmentDetailsDto,
-      );
       const patientAdmissionDetails = new PatientAdmissionDetails({
         ...patientAdmissionDetailsDto,
         pastHistoryOfChronicIllness,
       });
+
+      const doctorTreatmentDetails = new DoctorTreatmentDetails(
+        doctorTreatmentDetailsDto,
+      );
+
       const accidentDetails = new AccidentDetails(accidentDetailsDto);
       const maternityDetails = new MaternityDetails(maternityDetailsDto);
+
+      const policyDetails: PolicyDetails = new PolicyDetails(
+        eventPolicyDetails,
+      );
+      const memberDetails: MemberDetails = new MemberDetails(
+        eventMemberDetails,
+      );
+      const hospitalDetails: HospitalDetails = new HospitalDetails(
+        eventHospitalDetails,
+      );
 
       const adjudicationItem = new AdjudicationItem({
         claimId,
@@ -125,6 +136,9 @@ export class ClaimsAdjudicationController {
         doctorTreatmentDetails,
         patientAdmissionDetails,
         documents,
+        policyDetails,
+        memberDetails,
+        hospitalDetails,
       });
 
       if (isAccident) {
@@ -136,12 +150,15 @@ export class ClaimsAdjudicationController {
       }
 
       // perform non medical FWA
-      const { nonMedicalFWAResult, nonMedicalFWAReason, status } =
-        await this.claimsAdjudicationService.performNonMedicalFWA(
-          adjudicationItem,
-        );
+      const result = await this.claimsAdjudicationService.performNonMedicalFWA(
+        adjudicationItem,
+      );
 
-      const nonMedicalFwaEvent = new NonMedicalFWAEventDto({
+      await this.claimsAdjudicationService.saveAdjudicationItem(result);
+
+      const { nonMedicalFWAResult, nonMedicalFWAReason, status } = result;
+
+      const nonMedicalFwaCompletedEvent = new NonMedicalFWACompletedEventDto({
         claimId,
         claimItemId,
         nonMedicalFWAReason,
@@ -153,7 +170,7 @@ export class ClaimsAdjudicationController {
       // Publish to non-medical FWA completed topic
       await this.pubSubService.publishMessage(
         this.NON_MEDICAL_FWA_COMPLETED_TOPIC,
-        nonMedicalFwaEvent,
+        nonMedicalFwaCompletedEvent,
       );
     } catch (error) {
       throw new InternalServerErrorException(
@@ -202,16 +219,18 @@ export class ClaimsAdjudicationController {
       );
       console.log('Non medical adjudication results saved...');
 
-      const nonMedicalAdjEventDto = new NonMedicalAdjEventDto({
-        claimItemId,
-        overallComment,
-      });
+      const nonMedicalAdjEventCompletedDto = new NonMedicalAdjEventCompletedDto(
+        {
+          claimItemId,
+          overallComment,
+        },
+      );
 
       console.log('Publishing to non-medical-adj-completed topic...');
       // Publish to non-medical adjudication completed topic
       await this.pubSubService.publishMessage(
         this.NON_MEDICAL_ADJ_COMPLETED_TOPIC,
-        nonMedicalAdjEventDto,
+        nonMedicalAdjEventCompletedDto,
       );
     } catch (error) {
       throw new InternalServerErrorException(
@@ -225,7 +244,9 @@ export class ClaimsAdjudicationController {
   }
 
   @Post('non-medical-adj-handler')
-  async nonMedicalAdjudicationHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  async nonMedicalAdjudicationCompletedHandler(
+    @Body() pubSubMessage: PubSubMessageDto,
+  ) {
     console.log('-------------------  -------------------');
     console.log('medical FWA initiation handler invoked...');
     try {
@@ -233,19 +254,19 @@ export class ClaimsAdjudicationController {
         message: { data },
       } = pubSubMessage;
 
-      const nonMedicalAdjEventDto =
-        this.pubSubService.formatMessageData<NonMedicalAdjEventDto>(
+      const nonMedicalAdjCompletedEventDto =
+        this.pubSubService.formatMessageData<NonMedicalAdjEventCompletedDto>(
           data,
-          NonMedicalAdjEventDto,
+          NonMedicalAdjEventCompletedDto,
         );
 
       // perform medical adjudication
-      const { claimItemId } = nonMedicalAdjEventDto;
+      const { claimItemId } = nonMedicalAdjCompletedEventDto;
 
       const { medicalFWAResult, medicalFWAReason, status, claimId } =
         await this.claimsAdjudicationService.performMedicalFWA(claimItemId);
 
-      const medicalFwaEvent = new MedicalFWAEventDto({
+      const medicalFwaCompletedEvent = new MedicalFWACompletedEventDto({
         claimId,
         claimItemId,
         medicalFWAResult,
@@ -257,7 +278,7 @@ export class ClaimsAdjudicationController {
       // Publish to non-medical FWA completed topic
       await this.pubSubService.publishMessage(
         this.MEDICAL_FWA_COMPLETED_TOPIC,
-        medicalFwaEvent,
+        medicalFwaCompletedEvent,
       );
     } catch (error) {
       throw new InternalServerErrorException(
@@ -313,7 +334,7 @@ export class ClaimsAdjudicationController {
 
       const { status } = adjudicationItem;
 
-      const medicalAdjEventDto = new MedicalAdjEventDto({
+      const medicalAdjCompletedEventDto = new MedicalAdjCompletedEventDto({
         claimItemId,
         status,
         approvedPayableAmount,
@@ -324,7 +345,7 @@ export class ClaimsAdjudicationController {
       // Publish to non-medical adjudication completed topic
       await this.pubSubService.publishMessage(
         this.MEDICAL_ADJ_COMPLETED_TOPIC,
-        medicalAdjEventDto,
+        medicalAdjCompletedEventDto,
       );
     } catch (error) {
       throw new InternalServerErrorException(

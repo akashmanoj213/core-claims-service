@@ -17,6 +17,7 @@ export class HospitalDeclaration {
   isSigned: boolean;
   @CreateDateColumn()
   createdAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.hospitalDeclaration)
   claimDetails: Claim;
 

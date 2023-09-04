@@ -20,9 +20,14 @@ import { AccidentDetails } from './accident-details.entity';
 import { MaternityDetails } from './maternity-details.entity';
 import { ClaimItem, ClaimItemStatus } from './claim-item.entity';
 import { ClaimItemType, ClaimType } from 'src/core/enums';
+import { PolicyDetails } from './policy-details.entity';
+import { MemberDetails } from './member-details.entity';
+import { HospitalDetails } from './hospital-details.entity';
+import { VariationData } from './variation-data-entity';
 
 export enum ClaimStatus {
   INITIATED = 'initiated',
+  VARIATIONS_DETECTED = 'variations detected',
   UNDER_REVIEW = 'under review',
   REVIEW_COMPLETED = 'review completed',
   PAYOUT_INITIATED = 'payout initiated',
@@ -48,6 +53,8 @@ export class Claim {
   insuranceCardNumber: number; // might be generated at the time of issuance
   @Column()
   hospitalId: number;
+  @Column()
+  contactNumber: string;
   @Column({
     type: 'enum',
     enum: ClaimStatus,
@@ -91,6 +98,11 @@ export class Claim {
   coPayableAmount = 0.0;
   @Column()
   tpaId: number;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isVariationDetected = false;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
@@ -153,6 +165,27 @@ export class Claim {
   @JoinColumn()
   hospitalDeclaration: HospitalDeclaration; //  Check if names in declaration are same as the doctor details
   @OneToOne(
+    () => PolicyDetails,
+    (policyDetails) => policyDetails.claimDetails,
+    { cascade: true },
+  )
+  @JoinColumn()
+  policyDetails: PolicyDetails;
+  @OneToOne(
+    () => MemberDetails,
+    (memberDetails) => memberDetails.claimDetails,
+    { cascade: true },
+  )
+  @JoinColumn()
+  memberDetails: MemberDetails;
+  @OneToOne(
+    () => HospitalDetails,
+    (hospitlDetails) => hospitlDetails.claimDetails,
+    { cascade: true },
+  )
+  @JoinColumn()
+  hospitalDetails: HospitalDetails;
+  @OneToOne(
     () => MaternityDetails,
     (MaternityDetails) => MaternityDetails.claimDetails,
     { cascade: true, nullable: true },
@@ -168,6 +201,10 @@ export class Claim {
   accidentDetails?: AccidentDetails; // Check if insurance covers Maternity ?
   @OneToMany(() => ClaimItem, (claimItem) => claimItem.claim, { cascade: true })
   claimItems: ClaimItem[];
+  @OneToMany(() => VariationData, (variation) => variation.claim, {
+    cascade: true,
+  })
+  variations: VariationData[];
 
   constructor(init?: Partial<Claim>) {
     Object.assign(this, init);

@@ -1,6 +1,6 @@
 import { IsBoolean, IsInt, IsString } from 'class-validator';
 
-export class MedicalFWAEventDto {
+export class MedicalFWACompletedEventDto {
   @IsInt()
   claimId: number;
   @IsInt()
@@ -12,7 +12,7 @@ export class MedicalFWAEventDto {
   @IsBoolean()
   isFailure = false;
 
-  constructor(init?: MedicalFWAEventDto) {
+  constructor(init?: MedicalFWACompletedEventDto) {
     Object.assign(this, init);
   }
 }

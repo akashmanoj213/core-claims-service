@@ -18,6 +18,12 @@ import { ClaimItem } from './entities/claim-item.entity';
 import { PubSubModule } from 'src/core/providers/pub-sub/pub-sub.module';
 import { FileUploadModule } from 'src/core/providers/file-upload/file-upload.module';
 import { ClaimItemDocument } from './entities/claim-item-document.entity';
+import { HttpModule } from '@nestjs/axios';
+import { VariationData } from './entities/variation-data-entity';
+import { PolicyDetails } from './entities/policy-details.entity';
+import { HospitalDetails } from './entities/hospital-details.entity';
+import { MemberDetails } from './entities/member-details.entity';
+import { NotificationModule } from 'src/core/providers/notification/notification.module';
 
 @Module({
   imports: [
@@ -36,9 +42,15 @@ import { ClaimItemDocument } from './entities/claim-item-document.entity';
       AccidentDetails,
       ClaimItem,
       ClaimItemDocument,
+      VariationData,
+      PolicyDetails,
+      HospitalDetails,
+      MemberDetails,
     ]),
     PubSubModule,
     FileUploadModule,
+    HttpModule,
+    NotificationModule,
   ],
   controllers: [ClaimsController],
   providers: [ClaimsService],

@@ -93,7 +93,7 @@ export class ClaimItem {
     (claimItemDocument) => claimItemDocument.claimItem,
     { cascade: true },
   )
-  documents?: ClaimItemDocument[];
+  documents: ClaimItemDocument[];
 
   addDocuments(documents: ClaimItemDocument[]) {
     this.documents = documents;

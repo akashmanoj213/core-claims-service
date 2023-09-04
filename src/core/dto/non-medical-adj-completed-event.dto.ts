@@ -1,12 +1,12 @@
 import { IsInt, IsString } from 'class-validator';
 
-export class NonMedicalAdjEventDto {
+export class NonMedicalAdjEventCompletedDto {
   @IsInt()
   claimItemId: number;
   @IsString()
   overallComment: string;
 
-  constructor(init?: NonMedicalAdjEventDto) {
+  constructor(init?: NonMedicalAdjEventCompletedDto) {
     Object.assign(this, init);
   }
 }

@@ -1,38 +1,38 @@
 import {
+  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  UpdateDateColumn,
   Entity,
   OneToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { Claim } from './claim.entity';
 
 @Entity()
-export class AccidentDetails {
+export class HospitalDetails {
   @PrimaryGeneratedColumn()
   id?: number;
   @Column()
-  isRTA: boolean;
+  hospitalId: number;
   @Column()
-  dateOfInjury: Date;
+  hospitalName: string;
   @Column()
-  isReportedToPolice: boolean;
+  hospitalLocation: string;
   @Column()
-  FIRNumber: number;
+  hospitalPincode: string;
   @Column()
-  dueToAlcoholOrSubstanceAbuse: boolean;
+  hospitalEmailId: string;
   @Column()
-  isTestConducted: boolean;
+  rohiniId: number;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
 
-  @OneToOne(() => Claim, (Claim) => Claim.accidentDetails)
+  @OneToOne(() => Claim, (Claim) => Claim.hospitalDetails)
   claimDetails: Claim;
 
-  constructor(init?: Partial<AccidentDetails>) {
+  constructor(init?: Partial<HospitalDetails>) {
     Object.assign(this, init);
   }
 }

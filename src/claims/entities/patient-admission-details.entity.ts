@@ -106,6 +106,7 @@ export class PatientAdmissionDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToMany(
     () => PastChronicIllness,
     (PastChronicIllness) => PastChronicIllness.patientAdmissionDetails,

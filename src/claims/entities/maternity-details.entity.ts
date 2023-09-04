@@ -26,6 +26,7 @@ export class MaternityDetails {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @OneToOne(() => Claim, (Claim) => Claim.maternityDetails)
   claimDetails: Claim;
 

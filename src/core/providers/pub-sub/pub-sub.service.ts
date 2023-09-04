@@ -1,10 +1,6 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { Injectable } from '@nestjs/common';
-import {
-  ClassConstructor,
-  plainToClass,
-  plainToInstance,
-} from 'class-transformer';
+import { ClassConstructor, plainToClass } from 'class-transformer';
 
 @Injectable()
 export class PubSubService {

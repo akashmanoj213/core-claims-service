@@ -19,31 +19,36 @@ import { DoctorTreatmentDetails } from './entities/doctor-treatment-details.enti
 import { TpaHospitalDetails } from './entities/tpa-hospital-details.entity';
 import { PatientDeclaration } from './entities/patient-declaration.entity';
 import { HospitalDeclaration } from './entities/hospital-declaration.entity';
-import { Claim } from './entities/claim.entity';
+import { Claim, ClaimStatus } from './entities/claim.entity';
 import { DoctorDeclaration } from './entities/doctor-declaration.entity';
 import { TpaPolicyDetails } from './entities/tpa-policy-details.entity';
 import { TpaMemberDetails } from './entities/tpa-member-details.entity';
 import { PastChronicIllness } from './entities/past-chronic-illness.entity';
 import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
 import { PubSubMessageDto } from 'src/core/dto/pub-sub-message.dto';
-import { NonMedicalFWAEventDto } from 'src/core/dto/non-medical-fwa-event.dto';
-import { NonMedicalAdjEventDto } from 'src/core/dto/non-medical-adj-event.dto';
-import { InitiatedClaimEventDto } from 'src/core/dto/initiated-claim-event.dto';
-import { MedicalAdjEventDto } from 'src/core/dto/medical-adj-event.dto';
-import { MedicalFWAEventDto } from 'src/core/dto/medical-fwa-event.dto';
+import { NonMedicalFWACompletedEventDto } from 'src/core/dto/non-medical-fwa-completed-event.dto';
+import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-completed-event.dto';
+import { ClaimInitiatedEventDto } from 'src/core/dto/claim-initiated-event.dto';
+import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-event.dto';
+import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
+import { ClaimItem } from './entities/claim-item.entity';
+import { NotificationService } from 'src/core/providers/notification/notification.service';
 
 @Controller('claims')
 export class ClaimsController {
-  readonly INITIATED_CLAIMS_TOPIC = 'initiated-claims';
+  readonly CLAIM_INITIATED_TOPIC = 'claim-initiated';
 
   constructor(
     private readonly claimsService: ClaimsService,
     private pubSubService: PubSubService,
+    private notificationService: NotificationService,
   ) {}
 
   @Post()
   async create(@Body() createClaimDto: CreateClaimDto) {
     try {
+      console.log('Create claim API invoked...');
+
       const {
         tpaId,
         claimType,
@@ -51,6 +56,7 @@ export class ClaimsController {
         policyNumber,
         hospitalId,
         totalClaimAmount,
+        contactNumber,
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         patientAdmissionDetails: patientAdmissionDetailsDto,
@@ -91,6 +97,7 @@ export class ClaimsController {
         policyNumber,
         hospitalId,
         totalClaimAmount,
+        contactNumber,
         patientAdmissionDetails,
         doctorTreatmentDetails,
         tpaPolicyDetails,
@@ -114,13 +121,23 @@ export class ClaimsController {
         claim.maternityDetails = maternityDetails;
       }
 
-      //initiate new claim
-      const initiatedClaim = await this.claimsService.initiateClaim(claim);
+      //initiate new claim and check variations
+      const initiatedClaim = await this.claimsService.initiateAndVerifyClaim(
+        claim,
+      );
+
       // save new claim
-      const result = await this.claimsService.saveClaim(initiatedClaim);
+      const savedClaim = await this.claimsService.saveClaim(initiatedClaim);
       console.log('New claim request saved...');
 
-      return result;
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `A new claim with claim ID : ${savedClaim.id} has been initiated and will be reviewed shortly...`,
+      );
+
+      console.log('SMS sent to customer...');
+
+      return savedClaim;
     } catch (error) {
       throw new InternalServerErrorException('Failed to initiate claim !', {
         cause: error,
@@ -136,8 +153,7 @@ export class ClaimsController {
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     try {
-      // save document against claimItem
-      console.log('Upload document API called!');
+      console.log('fileUpload API invoked...');
 
       const fieldNames = [];
 
@@ -145,6 +161,7 @@ export class ClaimsController {
         fieldNames.push(file.fieldname);
       });
 
+      // validate document list
       this.validateDocumentsList(fieldNames);
 
       const documentRespondePromise =
@@ -158,22 +175,39 @@ export class ClaimsController {
 
       const documents = Array.from(documentResponse.values());
       claimItem.addDocuments(documents);
-      console.log('Saving documents...');
+
       await this.claimsService.saveClaimItem(claimItem);
 
-      const initiatedClaimEventDto = await this.prepareInitiatedClaimEventDto(
-        claimItemId,
+      const {
+        claim: { claimStatus, contactNumber, id },
+      } = claimItem;
+
+      // Continue the process of events only if no variation was detected with the claims data
+      if (claimStatus !== ClaimStatus.VARIATIONS_DETECTED) {
+        const claimInitiatedEventDto = await this.prepareClaimInitiatedEventDto(
+          claimItem,
+        );
+
+        console.log('Publishing to claim-initiated topic ...');
+        await this.pubSubService.publishMessage(
+          this.CLAIM_INITIATED_TOPIC,
+          claimInitiatedEventDto,
+        );
+
+        return 'Documents uploaded successfully !';
+      }
+
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Your claim - ${id} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
       );
 
-      console.log('Publishing to initiated-claims topic ...');
-      // Publish to initiated topic
-      await this.pubSubService.publishMessage(
-        this.INITIATED_CLAIMS_TOPIC,
-        initiatedClaimEventDto,
-      );
+      console.log('SMS sent to customer...');
+
+      return 'Documents uploaded successfully but data variations detected in claim values !';
     } catch (error) {
       throw new InternalServerErrorException(
-        'Error occured during fileUpload or publishing event!',
+        'Error occured during fileUpload or publishing event !',
         {
           cause: error,
           description: error.message,
@@ -183,7 +217,7 @@ export class ClaimsController {
   }
 
   @Post('non-medical-fwa-handler')
-  async nonMedicalFWAHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  async nonMedicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
     console.log('Non medical FWA hanlder invoked...');
     try {
@@ -191,18 +225,27 @@ export class ClaimsController {
         message: { data },
       } = pubSubMessage;
 
-      const nonMedicalFWAEventDto =
-        this.pubSubService.formatMessageData<NonMedicalFWAEventDto>(
+      const nonMedicalFWACompletedEventDto =
+        this.pubSubService.formatMessageData<NonMedicalFWACompletedEventDto>(
           data,
-          NonMedicalFWAEventDto,
+          NonMedicalFWACompletedEventDto,
         );
 
-      await this.claimsService.updateNonMedicalFWAResults(
-        nonMedicalFWAEventDto,
-      );
+      const { contactNumber, id } =
+        await this.claimsService.updateNonMedicalFWAResults(
+          nonMedicalFWACompletedEventDto,
+        );
+
       console.log(
-        'claim and claimItem status updated with non medical fwa event ...',
+        'Updated claim and claimItem status with non medical FWA event results ...',
       );
+
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Your claim ID : ${id} is currently under review. You will recieve a message once it is completed.`,
+      );
+
+      console.log('SMS sent to customer...');
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while handling non-medical-fwa-completed event!',
@@ -215,21 +258,23 @@ export class ClaimsController {
   }
 
   @Post('non-medical-adj-handler')
-  async nonMedicalAdjHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  async nonMedicalAdjCompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Non medical adj hanlder invoked...');
+    console.log('Non medical adj completed hanlder invoked...');
     try {
       const {
         message: { data },
       } = pubSubMessage;
 
-      const nonMedicalAdjEventDto =
-        this.pubSubService.formatMessageData<NonMedicalAdjEventDto>(
+      const nonMedicalAdjEventCompletedDto =
+        this.pubSubService.formatMessageData<NonMedicalAdjEventCompletedDto>(
           data,
-          NonMedicalAdjEventDto,
+          NonMedicalAdjEventCompletedDto,
         );
 
-      await this.claimsService.updateNonMedicalAdjesults(nonMedicalAdjEventDto);
+      await this.claimsService.updateNonMedicalAdjesults(
+        nonMedicalAdjEventCompletedDto,
+      );
       console.log(
         'claim and claimItem status updated with non medical adj event ...',
       );
@@ -245,7 +290,7 @@ export class ClaimsController {
   }
 
   @Post('medical-fwa-handler')
-  async medicalFWAHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  async medicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
     console.log('Medical FWA hanlder invoked...');
     try {
@@ -253,13 +298,15 @@ export class ClaimsController {
         message: { data },
       } = pubSubMessage;
 
-      const medicalFWAEventDto =
-        this.pubSubService.formatMessageData<MedicalFWAEventDto>(
+      const medicalFWACompletedEventDto =
+        this.pubSubService.formatMessageData<MedicalFWACompletedEventDto>(
           data,
-          MedicalFWAEventDto,
+          MedicalFWACompletedEventDto,
         );
 
-      await this.claimsService.updateMedicalFWAResults(medicalFWAEventDto);
+      await this.claimsService.updateMedicalFWAResults(
+        medicalFWACompletedEventDto,
+      );
       console.log('claimItem status updated with medical fwa event ...');
     } catch (error) {
       throw new InternalServerErrorException(
@@ -273,7 +320,7 @@ export class ClaimsController {
   }
 
   @Post('medical-adj-handler')
-  async medicalAdjHandler(@Body() pubSubMessage: PubSubMessageDto) {
+  async medicalAdjCompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
     console.log('Medical adj hanlder invoked...');
     try {
@@ -281,13 +328,15 @@ export class ClaimsController {
         message: { data },
       } = pubSubMessage;
 
-      const medicalAdjEventDto =
-        this.pubSubService.formatMessageData<MedicalAdjEventDto>(
+      const medicalAdjCompletedEventDto =
+        this.pubSubService.formatMessageData<MedicalAdjCompletedEventDto>(
           data,
-          MedicalAdjEventDto,
+          MedicalAdjCompletedEventDto,
         );
 
-      await this.claimsService.updateMedicalAdjResults(medicalAdjEventDto);
+      await this.claimsService.updateMedicalAdjResults(
+        medicalAdjCompletedEventDto,
+      );
       console.log(
         'claim and claimItem status updated with medical adj event ...',
       );
@@ -335,32 +384,36 @@ export class ClaimsController {
     return this.claimsService.remove(+id);
   }
 
-  async prepareInitiatedClaimEventDto(claimItemId: number) {
-    const claimItem = await this.claimsService.findClaimItem(claimItemId);
-
+  async prepareClaimInitiatedEventDto(claimItem: ClaimItem) {
     const {
+      id: claimItemId,
       totalAmount: claimItemTotalAmount,
       claimItemType,
       documents,
-      claim: {
-        id: claimId,
-        policyNumber,
-        insuranceCardNumber,
-        tpaId,
-        totalClaimAmount,
-        hospitalId,
-        accidentDetails,
-        maternityDetails,
-        doctorTreatmentDetails,
-        patientAdmissionDetails,
-        claimType,
-        isAccident,
-        isPregnancy,
-      },
+      claim,
     } = claimItem;
 
+    const {
+      id: claimId,
+      policyNumber,
+      insuranceCardNumber,
+      tpaId,
+      totalClaimAmount,
+      hospitalId,
+      accidentDetails,
+      maternityDetails,
+      doctorTreatmentDetails,
+      patientAdmissionDetails,
+      claimType,
+      isAccident,
+      isPregnancy,
+      policyDetails,
+      hospitalDetails,
+      memberDetails,
+    } = claim;
+
     // Including only claim related data. Redundant TPA data is not included.
-    const initiatedClaimItemDto = new InitiatedClaimEventDto({
+    const claimInitiatedEventDto = new ClaimInitiatedEventDto({
       claimId,
       policyNumber,
       insuranceCardNumber,
@@ -375,18 +428,21 @@ export class ClaimsController {
       isPregnancy,
       patientAdmissionDetails,
       doctorTreatmentDetails,
+      policyDetails,
+      hospitalDetails,
+      memberDetails,
       documents,
     });
 
     if (isAccident) {
-      initiatedClaimItemDto.accidentDetails = accidentDetails;
+      claimInitiatedEventDto.accidentDetails = accidentDetails;
     }
 
     if (isPregnancy) {
-      initiatedClaimItemDto.maternityDetails = maternityDetails;
+      claimInitiatedEventDto.maternityDetails = maternityDetails;
     }
 
-    return initiatedClaimItemDto;
+    return claimInitiatedEventDto;
   }
 
   validateDocumentsList(fieldNames: Array<string>) {

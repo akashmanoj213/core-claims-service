@@ -12,6 +12,9 @@ import { Type } from 'class-transformer';
 import { PatientAdmissionDetailsDto } from 'src/claims/dto/patient-admission-details.dto';
 import { AccidentDetailsDto } from 'src/claims/dto/accident-details.dto';
 import { MaternityDetailsDto } from 'src/claims/dto/maternity-details.dto';
+import { PolicyDetails } from 'src/claims/entities/policy-details.entity';
+import { MemberDetails } from 'src/claims/entities/member-details.entity';
+import { HospitalDetails } from 'src/claims/entities/hospital-details.entity';
 
 // export enum ClaimItemStatus {
 //   INITIATED = 'initiated',
@@ -33,7 +36,7 @@ export class ClaimItemDocumentDto {
   fieldName: string;
 }
 
-export class InitiatedClaimEventDto {
+export class ClaimInitiatedEventDto {
   @IsInt()
   claimId: number;
   @IsInt()
@@ -73,12 +76,23 @@ export class InitiatedClaimEventDto {
   documents: Array<ClaimItemDocumentDto>;
   @ValidateNested()
   @Type(() => AccidentDetailsDto)
+  // @IsOptional()
   accidentDetails?: AccidentDetailsDto;
   @ValidateNested()
   @Type(() => MaternityDetailsDto)
+  // @IsOptional()
   maternityDetails?: MaternityDetailsDto;
+  @ValidateNested()
+  @Type(() => PolicyDetails)
+  policyDetails: PolicyDetails;
+  @ValidateNested()
+  @Type(() => MemberDetails)
+  memberDetails: MemberDetails;
+  @ValidateNested()
+  @Type(() => HospitalDetails)
+  hospitalDetails: HospitalDetails;
 
-  constructor(init?: InitiatedClaimEventDto) {
+  constructor(init?: ClaimInitiatedEventDto) {
     Object.assign(this, init);
   }
 }

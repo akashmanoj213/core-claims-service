@@ -20,6 +20,7 @@ export class PastChronicIllness {
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
+
   @ManyToOne(
     () => PatientAdmissionDetails,
     (PatientAdmissionDetails) =>

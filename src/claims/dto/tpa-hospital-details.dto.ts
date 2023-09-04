@@ -1,8 +1,8 @@
 import { IsEmail, IsInt, IsString } from 'class-validator';
 
-export class HospitalDetailsDto {
+export class TpaHospitalDetailsDto {
   @IsInt()
-  id?: number;
+  hospitalId: number;
   @IsString()
   hospitalName: string;
   @IsString()

@@ -1,9 +1,9 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsDate, IsNumber, IsString, IsOptional } from 'class-validator';
+import { IsInt, IsDate, IsString, IsNumber, IsOptional } from 'class-validator';
 
-export class PolicyDetailsDto {
+export class TpaPolicyDetailsDto {
   @IsInt()
-  id?: number;
+  policyId: number;
   @IsDate()
   @Type(() => Date)
   startDate: Date;
@@ -23,7 +23,4 @@ export class PolicyDetailsDto {
   policyWaitingPeriod: number;
   @IsInt()
   totalNumberOfClaims: number;
-  // @ValidateNested()
-  // @Type(() => MemberDetailsDto)
-  // members: MemberDetailsDto[];
 }

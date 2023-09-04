@@ -71,9 +71,7 @@ export class AdjudicationItem {
     default: false,
   })
   isPregnancy = false;
-  @Column({
-    unique: true,
-  })
+  @Column()
   claimItemId: number;
   @Column({
     type: 'enum',
@@ -190,7 +188,7 @@ export class AdjudicationItem {
     (AdjudicationItemDocument) => AdjudicationItemDocument.adjudicationItem,
     { cascade: true },
   )
-  documents?: AdjudicationItemDocument[];
+  documents: AdjudicationItemDocument[];
 
   addNonMedicalFWAResult(fwaResult: string, fwaReason: string) {
     this.nonMedicalFWAResult = fwaResult;

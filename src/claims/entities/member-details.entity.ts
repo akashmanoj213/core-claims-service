@@ -8,14 +8,14 @@ import {
 } from 'typeorm';
 import { Claim } from './claim.entity';
 
-enum Gender {
+export enum Gender {
   MALE = 'male',
   FEMALE = 'female',
   OTHER = 'other',
 }
 
 @Entity()
-export class TpaMemberDetails {
+export class MemberDetails {
   @PrimaryGeneratedColumn()
   id?: number;
   @Column()
@@ -63,19 +63,15 @@ export class TpaMemberDetails {
   memberWaitingPeriod: number;
   @Column()
   numberOfClaims: number;
-  @Column()
-  startDate: Date;
-  @Column()
-  endDate: Date;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
   updatedAt?: Date;
 
-  @OneToOne(() => Claim, (Claim) => Claim.tpaMemberDetails)
+  @OneToOne(() => Claim, (Claim) => Claim.memberDetails)
   claimDetails: Claim;
 
-  constructor(init?: Partial<TpaMemberDetails>) {
+  constructor(init?: Partial<MemberDetails>) {
     Object.assign(this, init);
   }
 }

@@ -33,13 +33,8 @@ export class ClaimsAdjudicationService {
     private httpService: HttpService,
   ) {}
 
-  async performNonMedicalFWA(adjudicationItem: AdjudicationItem) {
-    const {
-      policyNumber,
-      insuranceCardNumber,
-      hospitalId,
-      claimItemTotalAmount,
-    } = adjudicationItem;
+  async checkPolicyConditions(adjudicationItem: AdjudicationItem) {
+    const { policyNumber, insuranceCardNumber, hospitalId } = adjudicationItem;
 
     // use the policy, hospital and member Id to call APIs of Policy service and get Policy and member level details
     const policyServiceApi = firstValueFrom(
@@ -82,6 +77,53 @@ export class ClaimsAdjudicationService {
     adjudicationItem.policyDetails = policyDetails;
     adjudicationItem.memberDetails = memberDetails;
     adjudicationItem.hospitalDetails = hospitalDetails;
+  }
+
+  async performNonMedicalFWA(adjudicationItem: AdjudicationItem) {
+    const { policyDetails, hospitalDetails, claimItemTotalAmount } =
+      adjudicationItem;
+
+    // use the policy, hospital and member Id to call APIs of Policy service and get Policy and member level details
+    // const policyServiceApi = firstValueFrom(
+    //   this.httpService.get(
+    //     `${this.MOCK_SERVICE_BASE_URL}/policy/${policyNumber}`,
+    //   ),
+    // );
+    // const hospitalServiceApi = firstValueFrom(
+    //   this.httpService.get(
+    //     `${this.MOCK_SERVICE_BASE_URL}/hospital/${hospitalId}`,
+    //   ),
+    // );
+
+    // const [{ data: policyDetailsData }, { data: hospitalDetailsData }] =
+    //   await Promise.all([policyServiceApi, hospitalServiceApi]);
+
+    // const policyDetailsDto: PolicyDetailsDto = policyDetailsData;
+    // const memberDetailsDto: MemberDetailsDto = policyDetailsDto.members.find(
+    //   (member) => member.id === insuranceCardNumber,
+    // );
+    // const hospitalDetailsDto: HospitalDetailsDto = hospitalDetailsData;
+
+    // const policyDetails = new PolicyDetails({
+    //   ...policyDetailsDto,
+    //   policyId: policyDetailsDto.id,
+    //   id: null,
+    // });
+    // const memberDetails = new MemberDetails({
+    //   ...memberDetailsDto,
+    //   memberId: memberDetailsDto.id,
+    //   policyId: policyDetailsDto.id,
+    //   id: null,
+    // });
+    // const hospitalDetails = new HospitalDetails({
+    //   ...hospitalDetailsDto,
+    //   hospitalId: hospitalDetailsDto.id,
+    //   id: null,
+    // });
+
+    // adjudicationItem.policyDetails = policyDetails;
+    // adjudicationItem.memberDetails = memberDetails;
+    // adjudicationItem.hospitalDetails = hospitalDetails;
 
     //perform FWA check
     const fwaProcessParams = {
@@ -106,10 +148,6 @@ export class ClaimsAdjudicationService {
       console.log('Error occured while running non medical FWA rule engine');
       adjudicationItem.status = AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED;
     }
-
-    // save adjudication item
-    await this.adjudicationItemRepository.save(adjudicationItem);
-    console.log('Non Medical FWA decision saved against adjudicationItem...');
 
     return adjudicationItem;
   }
@@ -185,6 +223,11 @@ export class ClaimsAdjudicationService {
     await this.adjudicationItemRepository.save(adjudicationItem);
 
     return adjudicationItem;
+  }
+
+  async saveAdjudicationItem(adjudicationItem: AdjudicationItem) {
+    console.log('Saving adjudication item...');
+    await this.adjudicationItemRepository.save(adjudicationItem);
   }
 
   async findOne(id: number) {
