@@ -53,64 +53,107 @@ export class ClaimsService {
     const [{ data: policyDetailsData }, { data: hospitalDetailsData }] =
       await Promise.all([policyServiceApiResponse, hospitalServiceApiResponse]);
 
-    const policyDetailsDto: PolicyDetailsDto = plainToInstance(
-      PolicyDetailsDto,
-      policyDetailsData,
-    );
-    const memberDetailsDto: MemberDetailsDto = plainToInstance(
-      MemberDetailsDto,
-      policyDetailsData.members.find(
-        (member) => member.id === insuranceCardNumber,
-      ),
-    );
-    const hospitalDetailsDto: HospitalDetailsDto = plainToInstance(
-      HospitalDetailsDto,
-      hospitalDetailsData,
-    );
+    const variations: VariationData[] = [];
 
-    const policyDetails = new PolicyDetails({
-      ...policyDetailsDto,
-      policyId: policyDetailsDto.id,
-      id: null,
-    });
-    const memberDetails = new MemberDetails({
-      ...memberDetailsDto,
-      memberId: memberDetailsDto.id,
-      policyId: policyDetailsDto.id,
-      id: null,
-    });
-    const hospitalDetails = new HospitalDetails({
-      ...hospitalDetailsDto,
-      hospitalId: hospitalDetailsDto.id,
-      id: null,
-    });
+    if (policyDetailsData) {
+      const policyDetailsDto: PolicyDetailsDto = plainToInstance(
+        PolicyDetailsDto,
+        policyDetailsData,
+      );
 
-    claim.policyDetails = policyDetails;
-    claim.memberDetails = memberDetails;
-    claim.hospitalDetails = hospitalDetails;
+      const memberDetailsDto: MemberDetailsDto = plainToInstance(
+        MemberDetailsDto,
+        policyDetailsData.members.find(
+          (member) => member.id === insuranceCardNumber,
+        ),
+      );
 
-    const variationData: VariationData[] = [];
+      const policyDetails = new PolicyDetails({
+        ...policyDetailsDto,
+        policyId: policyDetailsDto.id,
+        id: null,
+      });
 
-    // check policy variation
-    variationData.push(
-      ...this.checkVariations(tpaPolicyDetails, policyDetails, 'policy'),
-    );
+      const memberDetails = new MemberDetails({
+        ...memberDetailsDto,
+        memberId: memberDetailsDto.id,
+        policyId: policyDetailsDto.id,
+        id: null,
+      });
 
-    // check policy variation
-    variationData.push(
-      ...this.checkVariations(tpaMemberDetails, memberDetails, 'member'),
-    );
+      claim.policyDetails = policyDetails;
+      claim.memberDetails = memberDetails;
 
-    // check policy variation
-    variationData.push(
-      ...this.checkVariations(tpaHospitalDetails, hospitalDetails, 'hospital'),
-    );
+      // check policy variation
+      variations.push(
+        ...this.checkVariations(tpaPolicyDetails, policyDetails, 'policy'),
+      );
 
-    if (variationData.length) {
+      // check member variation
+      variations.push(
+        ...this.checkVariations(tpaMemberDetails, memberDetails, 'member'),
+      );
+    } else {
+      console.log(`No policy found with policy id: ${policyNumber} !`);
+      // Add a variation with fieldName as "PolicyDetails" that signified that there is no policy data found
+      const policyVariation = new VariationData({
+        sectionName: 'policy',
+        fieldName: 'PolicyDetails',
+        receivedStringValue: 'No such policy found',
+      });
+
+      console.log(
+        `No member found as policy with id: ${policyNumber} is missing !`,
+      );
+      // Add a variation with fieldName as "MemberDetails" that signified that there is no member data found
+      const memberVariation = new VariationData({
+        sectionName: 'member',
+        fieldName: 'MemberDetails',
+        receivedStringValue: 'No such member found',
+      });
+
+      variations.push(policyVariation, memberVariation);
+    }
+
+    if (hospitalDetailsData) {
+      const hospitalDetailsDto: HospitalDetailsDto = plainToInstance(
+        HospitalDetailsDto,
+        hospitalDetailsData,
+      );
+
+      const hospitalDetails = new HospitalDetails({
+        ...hospitalDetailsDto,
+        hospitalId: hospitalDetailsDto.id,
+        id: null,
+      });
+
+      claim.hospitalDetails = hospitalDetails;
+
+      // check hospital variation
+      variations.push(
+        ...this.checkVariations(
+          tpaHospitalDetails,
+          hospitalDetails,
+          'hospital',
+        ),
+      );
+    } else {
+      console.log(`No hospital found with hospital id: ${hospitalId}`);
+      // Add a variation with fieldName as "HospitalDetails" that signified that there is no hospital data found
+      const variationData = new VariationData({
+        sectionName: 'hospital',
+        fieldName: 'HospitalDetails',
+        receivedStringValue: 'No such hospital found',
+      });
+
+      variations.push(variationData);
+    }
+
+    if (variations.length) {
       console.log('Variation detected...');
       claim.isVariationDetected = true;
       claim.claimStatus = ClaimStatus.VARIATIONS_DETECTED;
-      claim.variations = variationData;
+      claim.variations = variations;
     } else {
       claim.claimStatus = ClaimStatus.INITIATED;
     }
