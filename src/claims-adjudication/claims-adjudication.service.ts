@@ -6,7 +6,12 @@ import {
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { CamundaClientService } from 'src/core/providers/camunda-client/camunda-client.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  EntityManager,
+  EntityTarget,
+  ObjectLiteral,
+  Repository,
+} from 'typeorm';
 import { NonMedicalFWAOutcomeDto } from 'src/core/dto/non-medical-fwa-outcome.dto';
 import { NonMedicalAdjudicationResult } from './entities/non-medical-adjudication-result.entity';
 import { MedicalFWAOutcomeDto } from 'src/core/dto/medical-fwa-outcome.dto';
@@ -29,6 +34,7 @@ export class ClaimsAdjudicationService {
   constructor(
     @InjectRepository(AdjudicationItem, 'claims-adjudication')
     private adjudicationItemRepository: Repository<AdjudicationItem>,
+    private entityManger: EntityManager,
     private camundaClientService: CamundaClientService,
     private httpService: HttpService,
   ) {}
@@ -83,49 +89,6 @@ export class ClaimsAdjudicationService {
     const { policyDetails, hospitalDetails, claimItemTotalAmount } =
       adjudicationItem;
 
-    // use the policy, hospital and member Id to call APIs of Policy service and get Policy and member level details
-    // const policyServiceApi = firstValueFrom(
-    //   this.httpService.get(
-    //     `${this.MOCK_SERVICE_BASE_URL}/policy/${policyNumber}`,
-    //   ),
-    // );
-    // const hospitalServiceApi = firstValueFrom(
-    //   this.httpService.get(
-    //     `${this.MOCK_SERVICE_BASE_URL}/hospital/${hospitalId}`,
-    //   ),
-    // );
-
-    // const [{ data: policyDetailsData }, { data: hospitalDetailsData }] =
-    //   await Promise.all([policyServiceApi, hospitalServiceApi]);
-
-    // const policyDetailsDto: PolicyDetailsDto = policyDetailsData;
-    // const memberDetailsDto: MemberDetailsDto = policyDetailsDto.members.find(
-    //   (member) => member.id === insuranceCardNumber,
-    // );
-    // const hospitalDetailsDto: HospitalDetailsDto = hospitalDetailsData;
-
-    // const policyDetails = new PolicyDetails({
-    //   ...policyDetailsDto,
-    //   policyId: policyDetailsDto.id,
-    //   id: null,
-    // });
-    // const memberDetails = new MemberDetails({
-    //   ...memberDetailsDto,
-    //   memberId: memberDetailsDto.id,
-    //   policyId: policyDetailsDto.id,
-    //   id: null,
-    // });
-    // const hospitalDetails = new HospitalDetails({
-    //   ...hospitalDetailsDto,
-    //   hospitalId: hospitalDetailsDto.id,
-    //   id: null,
-    // });
-
-    // adjudicationItem.policyDetails = policyDetails;
-    // adjudicationItem.memberDetails = memberDetails;
-    // adjudicationItem.hospitalDetails = hospitalDetails;
-
-    //perform FWA check
     const fwaProcessParams = {
       pincode: hospitalDetails.hospitalPincode,
       frequency: policyDetails.totalNumberOfClaims,
@@ -141,6 +104,7 @@ export class ClaimsAdjudicationService {
         this.NON_MEDICAL_FWA_PROCESS_ID,
         fwaProcessParams,
       );
+
       console.log('Rule engine result:', fwaDecision);
 
       adjudicationItem.addNonMedicalFWAResult(fwaDecision, fwaReason);
@@ -230,7 +194,7 @@ export class ClaimsAdjudicationService {
     await this.adjudicationItemRepository.save(adjudicationItem);
   }
 
-  async findOne(id: number) {
+  async findAdjudicationItem(id: number) {
     return await this.adjudicationItemRepository.findOne({
       where: {
         id,
@@ -250,7 +214,7 @@ export class ClaimsAdjudicationService {
     });
   }
 
-  async findOneByClaimItemId(claimItemId: number) {
+  async findAdjudicationItemByClaimItemId(claimItemId: number) {
     return await this.adjudicationItemRepository.findOne({
       where: {
         claimItemId,
@@ -272,6 +236,34 @@ export class ClaimsAdjudicationService {
         },
       },
     });
+  }
+
+  async findAdjudicationItemByClaimId(claimId: number) {
+    return await this.adjudicationItemRepository.findOne({
+      where: {
+        claimId,
+      },
+      relations: {
+        documents: true,
+        patientAdmissionDetails: { pastHistoryOfChronicIllness: true },
+        doctorTreatmentDetails: true,
+        accidentDetails: true,
+        maternityDetails: true,
+        policyDetails: true,
+        memberDetails: true,
+        hospitalDetails: true,
+        nonMedicalAdjudicationResult: {
+          variations: true,
+        },
+        medicalAdjudicationResult: {
+          variations: true,
+        },
+      },
+    });
+  }
+
+  async findEntity(entity: EntityTarget<ObjectLiteral>, id: number) {
+    return await this.entityManger.findOneBy(entity, { id });
   }
 
   update(id: number) {

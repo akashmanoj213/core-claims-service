@@ -33,6 +33,8 @@ import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-
 import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
 import { ClaimItem } from './entities/claim-item.entity';
 import { NotificationService } from 'src/core/providers/notification/notification.service';
+import { CreateEnhancementDto } from './dto/create-enhancement.dto';
+import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
 
 @Controller('claims')
 export class ClaimsController {
@@ -55,7 +57,7 @@ export class ClaimsController {
         insuranceCardNumber,
         policyNumber,
         hospitalId,
-        totalClaimAmount,
+        // totalClaimAmount,
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         patientAdmissionDetails: patientAdmissionDetailsDto,
@@ -96,7 +98,6 @@ export class ClaimsController {
         insuranceCardNumber,
         policyNumber,
         hospitalId,
-        totalClaimAmount,
         contactNumber,
         patientAdmissionDetails,
         doctorTreatmentDetails,
@@ -130,12 +131,11 @@ export class ClaimsController {
       const savedClaim = await this.claimsService.saveClaim(initiatedClaim);
       console.log('New claim request saved...');
 
+      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
         `A new claim with claim ID : ${savedClaim.id} has been initiated and will be reviewed shortly...`,
       );
-
-      console.log('SMS sent to customer...');
 
       return savedClaim;
     } catch (error) {
@@ -146,7 +146,91 @@ export class ClaimsController {
     }
   }
 
-  @Post('fileUpload/:claimItemId')
+  @Post('/:claimId/enhancement')
+  async addEnhancement(
+    @Param('claimId') claimId: number,
+    @Body() createEnhancementDto: CreateEnhancementDto,
+  ) {
+    try {
+      console.log('addEnhancement API invoked...');
+      const { enhancementAmount } = createEnhancementDto;
+
+      const claim = await this.claimsService.createEnhancement(
+        claimId,
+        enhancementAmount,
+      );
+
+      const savedClaim = await this.claimsService.saveClaim(claim);
+
+      const { contactNumber, claimItems } = savedClaim;
+
+      const enhancementClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
+
+      console.log(
+        `New enhancement claim item with id: ${enhancementClaimItem.id} created...`,
+      );
+
+      console.log('Sending SMS to customer...');
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `An enhancement request has been placed for your claim id: ${claimId} and will be reviewed shortly...`,
+      );
+
+      return enhancementClaimItem;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create enhancement claim item !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('/:claimId/final-submission')
+  async addFinalSubmission(
+    @Param('claimId') claimId: number,
+    @Body() createFinalSubmissionDto: CreateFinalSubmissionDto,
+  ) {
+    try {
+      console.log('addFinalSubmission API invoked...');
+      const { remainingAmount } = createFinalSubmissionDto;
+
+      const claim = await this.claimsService.createFinalSubmission(
+        claimId,
+        remainingAmount,
+      );
+
+      const savedClaim = await this.claimsService.saveClaim(claim);
+
+      const { contactNumber, claimItems } = savedClaim;
+
+      const finalClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
+
+      console.log(
+        `Final submission claim item with id: ${finalClaimItem.id} created...`,
+      );
+
+      console.log('Sending SMS to customer...');
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `A final discharge request has been placed for your claim id: ${claimId} and will be reviewed shortly...`,
+      );
+
+      return finalClaimItem;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create final submission claim item !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('claim-item/:claimItemId/file-upload')
   @UseInterceptors(AnyFilesInterceptor())
   async fileUpload(
     @Param('claimItemId') claimItemId: number,
@@ -197,12 +281,11 @@ export class ClaimsController {
         return 'Documents uploaded successfully !';
       }
 
+      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
         `Your claim - ${id} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
       );
-
-      console.log('SMS sent to customer...');
 
       return 'Documents uploaded successfully but data variations detected in claim values !';
     } catch (error) {
@@ -240,12 +323,11 @@ export class ClaimsController {
         'Updated claim and claimItem status with non medical FWA event results ...',
       );
 
+      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
         `Your claim ID : ${id} is currently under review. You will recieve a message once it is completed.`,
       );
-
-      console.log('SMS sent to customer...');
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while handling non-medical-fwa-completed event!',
@@ -334,12 +416,14 @@ export class ClaimsController {
           MedicalAdjCompletedEventDto,
         );
 
-      await this.claimsService.updateMedicalAdjResults(
+      const claim = await this.claimsService.updateMedicalAdjResults(
         medicalAdjCompletedEventDto,
       );
       console.log(
         'claim and claimItem status updated with medical adj event ...',
       );
+
+      //if claim.isDischarged ? Then publish purchase related event
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while handling non-medical-adj-completed event!',

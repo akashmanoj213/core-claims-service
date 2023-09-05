@@ -37,10 +37,16 @@ export class PatientAdmissionDetails {
   isEmergencyHospitalisation: boolean;
   @Column()
   isPlannedHospitalisation: boolean;
-  @Column()
-  expectedNumberOfDaysStay: number; // is this part of hospital data
-  @Column()
-  expectedDaysInICU: number; // is this part of hosptial data
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  expectedNumberOfDaysStay = 0; // is this part of hospital data
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  expectedDaysInICU = 0; // is this part of hosptial data
   @Column({
     type: 'enum',
     enum: RoomType,
@@ -50,58 +56,67 @@ export class PatientAdmissionDetails {
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  roomNursingPatientDietCharges: number; // is this part of hospital data ? HOW DO WE CALCULATE FOR COMBINED FIELDS LIKE THIS ?
+  roomNursingPatientDietCharges = 0.0; // is this part of hospital data ? HOW DO WE CALCULATE FOR COMBINED FIELDS LIKE THIS ?
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  expectedInvestigationDiagnosticsCost: number; // is this part of hospital data
-  @Column({
-    nullable: true,
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-  })
-  ICUCharges: number; // is this part of hospital data and is it disease related or standard pricing ?
+  expectedInvestigationDiagnosticsCost = 0.0; // is this part of hospital data
   @Column({
     nullable: true,
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  OTCharges: number; // is this part of hospital data and is it disease related or standard pricing ?
+  ICUCharges = 0.0; // is this part of hospital data and is it disease related or standard pricing ?
+  @Column({
+    nullable: true,
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0.0,
+  })
+  OTCharges = 0.0; // is this part of hospital data and is it disease related or standard pricing ?
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  professionalAnestheticFeesCosultationCharges: number; // is this part of hospital data and is it disease related or standard pricing ?
+  professionalAnestheticFeesCosultationCharges = 0.0; // is this part of hospital data and is it disease related or standard pricing ?
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  medicineConsumableImplantCharges: number; // is this part of hospital data and is it disease related or standard pricing ?
+  medicineConsumableImplantCharges = 0.0; // is this part of hospital data and is it disease related or standard pricing ?
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  otherHospitalExpenses: number; // is this part of hospital data
+  otherHospitalExpenses = 0.0; // is this part of hospital data
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  allInclusivePackageCharges: number; // is this part of hospital data? IF THIS IS PART OF A PACKAGE THEN ARE THERE STILL INDIVIDUAL CHARGES ALLOTED ?
+  allInclusivePackageCharges = 0.0; // is this part of hospital data? IF THIS IS PART OF A PACKAGE THEN ARE THERE STILL INDIVIDUAL CHARGES ALLOTED ?
   @Column({
     type: 'decimal',
     precision: 10,
     scale: 2,
+    default: 0.0,
   })
-  sumTotalExpectedHospitalisationCost: number; // is this part of hospital data? IF PACKAGE THEN WILL THIS BE SAME AS PACKAGE ?
+  sumTotalExpectedHospitalisationCost = 0.0; // is this part of hospital data? IF PACKAGE THEN WILL THIS BE SAME AS PACKAGE ?
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()

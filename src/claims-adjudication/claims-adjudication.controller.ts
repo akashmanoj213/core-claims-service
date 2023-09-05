@@ -86,39 +86,61 @@ export class ClaimsAdjudicationController {
         documents: documentsDto,
       } = claimInitiatedEventDto;
 
-      // need to convert the array inside from DTO to entity as well
-      const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
-        patientAdmissionDetailsDto;
+      let documents: AdjudicationItemDocument[],
+        patientAdmissionDetails: PatientAdmissionDetails,
+        doctorTreatmentDetails: DoctorTreatmentDetails,
+        accidentDetails: AccidentDetails,
+        maternityDetails: MaternityDetails,
+        policyDetails: PolicyDetails,
+        memberDetails: MemberDetails,
+        hospitalDetails: HospitalDetails;
 
-      const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
-        (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
-      );
-      const documents = documentsDto.map(
-        (adjudicationitemDocument) =>
-          new AdjudicationItemDocument(adjudicationitemDocument),
-      );
+      //check if an adjudication item already exists for the same claim
+      const existingAdjudicationItem =
+        await this.claimsAdjudicationService.findAdjudicationItemByClaimId(
+          claimId,
+        );
 
-      const patientAdmissionDetails = new PatientAdmissionDetails({
-        ...patientAdmissionDetailsDto,
-        pastHistoryOfChronicIllness,
-      });
+      if (existingAdjudicationItem) {
+        console.log('Using existing database references...');
+        documents = existingAdjudicationItem.documents;
+        doctorTreatmentDetails =
+          existingAdjudicationItem.doctorTreatmentDetails;
+        policyDetails = existingAdjudicationItem.policyDetails;
+        memberDetails = existingAdjudicationItem.memberDetails;
+        hospitalDetails = existingAdjudicationItem.hospitalDetails;
+        accidentDetails = existingAdjudicationItem.accidentDetails;
+        maternityDetails = existingAdjudicationItem.maternityDetails;
+      } else {
+        // need to convert the array inside from DTO to entity as well
+        const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
+          patientAdmissionDetailsDto;
 
-      const doctorTreatmentDetails = new DoctorTreatmentDetails(
-        doctorTreatmentDetailsDto,
-      );
+        const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
+          (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
+        );
 
-      const accidentDetails = new AccidentDetails(accidentDetailsDto);
-      const maternityDetails = new MaternityDetails(maternityDetailsDto);
+        documents = documentsDto.map(
+          (adjudicationItemDocument) =>
+            new AdjudicationItemDocument(adjudicationItemDocument),
+        );
 
-      const policyDetails: PolicyDetails = new PolicyDetails(
-        eventPolicyDetails,
-      );
-      const memberDetails: MemberDetails = new MemberDetails(
-        eventMemberDetails,
-      );
-      const hospitalDetails: HospitalDetails = new HospitalDetails(
-        eventHospitalDetails,
-      );
+        patientAdmissionDetails = new PatientAdmissionDetails({
+          ...patientAdmissionDetailsDto,
+          pastHistoryOfChronicIllness,
+        });
+
+        doctorTreatmentDetails = new DoctorTreatmentDetails(
+          doctorTreatmentDetailsDto,
+        );
+
+        accidentDetails = new AccidentDetails(accidentDetailsDto);
+        maternityDetails = new MaternityDetails(maternityDetailsDto);
+
+        policyDetails = new PolicyDetails(eventPolicyDetails);
+        memberDetails = new MemberDetails(eventMemberDetails);
+        hospitalDetails = new HospitalDetails(eventHospitalDetails);
+      }
 
       const adjudicationItem = new AdjudicationItem({
         claimId,
@@ -213,10 +235,11 @@ export class ClaimsAdjudicationController {
         });
       }
 
-      await this.claimsAdjudicationService.saveNonMedicalAdjResult(
-        claimItemId,
-        nonMedicalAdjudicationResult,
-      );
+      const adjudicationItem =
+        await this.claimsAdjudicationService.saveNonMedicalAdjResult(
+          claimItemId,
+          nonMedicalAdjudicationResult,
+        );
       console.log('Non medical adjudication results saved...');
 
       const nonMedicalAdjEventCompletedDto = new NonMedicalAdjEventCompletedDto(
@@ -232,6 +255,8 @@ export class ClaimsAdjudicationController {
         this.NON_MEDICAL_ADJ_COMPLETED_TOPIC,
         nonMedicalAdjEventCompletedDto,
       );
+
+      return adjudicationItem;
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while saving non medical adjudication result!',
@@ -332,9 +357,10 @@ export class ClaimsAdjudicationController {
         );
       console.log('Medical adjudication results saved...');
 
-      const { status } = adjudicationItem;
+      const { status, claimId } = adjudicationItem;
 
       const medicalAdjCompletedEventDto = new MedicalAdjCompletedEventDto({
+        claimId,
         claimItemId,
         status,
         approvedPayableAmount,
@@ -347,6 +373,8 @@ export class ClaimsAdjudicationController {
         this.MEDICAL_ADJ_COMPLETED_TOPIC,
         medicalAdjCompletedEventDto,
       );
+
+      return adjudicationItem;
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while saving medical adjudication result!',
@@ -358,19 +386,16 @@ export class ClaimsAdjudicationController {
     }
   }
 
-  // @Get()
-  // findAll() {
-  //   // return this.claimsAdjudicationService.findAll();
-  // }
-
   @Get()
   findByClaimitem(@Query('claimItemId') claimItemId: number) {
-    return this.claimsAdjudicationService.findOneByClaimItemId(+claimItemId);
+    return this.claimsAdjudicationService.findAdjudicationItemByClaimItemId(
+      +claimItemId,
+    );
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.claimsAdjudicationService.findOne(+id);
+    return this.claimsAdjudicationService.findAdjudicationItem(+id);
   }
 
   @Patch(':id')

@@ -81,7 +81,7 @@ export class Claim {
     precision: 10,
     scale: 2,
   })
-  totalClaimAmount: number;
+  totalClaimAmount = 0.0;
   @Column({
     type: 'decimal',
     precision: 10,
@@ -103,6 +103,11 @@ export class Claim {
     default: false,
   })
   isVariationDetected = false;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isDischarged = false;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
@@ -211,22 +216,68 @@ export class Claim {
   }
 
   addNewClaimItem(claimItem: ClaimItem) {
-    if (!(claimItem.totalAmount > 0)) {
-      throw new Error('claimItem must have a positive claim amount');
-    }
-
     claimItem.claimItemStatus = ClaimItemStatus.INITIATED;
 
-    if (this.claimItems && this.claimItems.length >= 0) {
-      claimItem.claimItemType = ClaimItemType.ENHANCEMENT;
+    if (this.claimItems && this.claimItems.length) {
+      // Check if any claim item is under review
+      this.claimItems.sort((a, b) => b.id - a.id);
+      const latestClaimItem = this.claimItems[0];
+
+      if (
+        latestClaimItem.claimItemStatus !== ClaimItemStatus.APPROVED &&
+        latestClaimItem.claimItemStatus !== ClaimItemStatus.REJECTED
+      ) {
+        throw new Error(
+          'A new claim item cannot be added as another claim item is already under review !',
+        );
+      }
+
+      // Add claim item
+      if (claimItem.claimItemType === ClaimItemType.ENHANCEMENT) {
+        if (!(claimItem.totalAmount > 0)) {
+          throw new Error(
+            "An 'enhancement' claim item must have a positive totalAmount !",
+          );
+        }
+      } else if (claimItem.claimItemType === ClaimItemType.INTIAL) {
+        throw new Error("Claim item with type 'initial' already exists !");
+      } else {
+        if (this.isDischarged) {
+          throw new Error("Claim item with type 'final' already exists !");
+        }
+
+        this.isDischarged = true;
+      }
+
       this.claimItems.push(claimItem);
-      this.totalClaimAmount += claimItem.totalAmount;
     } else {
-      claimItem.claimItemType = ClaimItemType.INTIAL;
-      this.claimItems = [claimItem];
-      if (this.totalClaimAmount !== claimItem.totalAmount) {
-        this.totalClaimAmount = claimItem.totalAmount;
+      if (claimItem.claimItemType === ClaimItemType.INTIAL) {
+        if (
+          !this.patientAdmissionDetails ||
+          !this.patientAdmissionDetails.sumTotalExpectedHospitalisationCost
+        ) {
+          throw new Error(
+            'patientAdmissionDetails.sumTotalExpectedHospitalisationCost has to be a positive value !',
+          );
+        }
+
+        claimItem.totalAmount = parseFloat(
+          this.patientAdmissionDetails.sumTotalExpectedHospitalisationCost.toString(),
+        );
+        this.claimItems = [claimItem];
+      } else if (claimItem.claimItemType === ClaimItemType.ENHANCEMENT) {
+        throw new Error(
+          "An 'enhancement' claim item cannot be added to a claim without an 'initial' claim item !",
+        );
+      } else {
+        throw new Error(
+          "A 'final' claim item cannot be added to a claim without an 'initial' claim item !",
+        );
       }
     }
+
+    this.totalClaimAmount =
+      parseFloat(this.totalClaimAmount.toString()) +
+      parseFloat(claimItem.totalAmount.toString());
   }
 }

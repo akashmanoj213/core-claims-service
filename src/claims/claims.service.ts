@@ -21,6 +21,7 @@ import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { VariationData } from './entities/variation-data-entity';
 import { plainToInstance } from 'class-transformer';
+import { ClaimItemType } from 'src/core/enums';
 
 @Injectable()
 export class ClaimsService {
@@ -159,7 +160,43 @@ export class ClaimsService {
     }
 
     const newClaimItem = new ClaimItem({
-      totalAmount: claim.totalClaimAmount,
+      claimItemType: ClaimItemType.INTIAL,
+    });
+
+    claim.addNewClaimItem(newClaimItem);
+
+    return claim;
+  }
+
+  async createEnhancement(claimId: number, enhancementAmount: number) {
+    const claim = await this.claimRepository.findOne({
+      where: { id: claimId },
+      relations: {
+        claimItems: true,
+      },
+    });
+
+    const newClaimItem = new ClaimItem({
+      totalAmount: enhancementAmount,
+      claimItemType: ClaimItemType.ENHANCEMENT,
+    });
+
+    claim.addNewClaimItem(newClaimItem);
+
+    return claim;
+  }
+
+  async createFinalSubmission(claimId: number, remainingAmount: number) {
+    const claim = await this.claimRepository.findOne({
+      where: { id: claimId },
+      relations: {
+        claimItems: true,
+      },
+    });
+
+    const newClaimItem = new ClaimItem({
+      totalAmount: remainingAmount,
+      claimItemType: ClaimItemType.FINAL,
     });
 
     claim.addNewClaimItem(newClaimItem);
@@ -318,20 +355,22 @@ export class ClaimsService {
   async updateMedicalAdjResults(
     medicalAdjEventDto: MedicalAdjCompletedEventDto,
   ) {
-    const { claimItemId, status, approvedPayableAmount, coPayableAmount } =
-      medicalAdjEventDto;
+    const {
+      claimItemId,
+      status,
+      approvedPayableAmount,
+      coPayableAmount,
+      claimId,
+    } = medicalAdjEventDto;
 
     const claimItem = await this.claimItemRepository.findOne({
       where: {
         id: claimItemId,
       },
-      relations: {
-        claim: true,
-      },
     });
 
     const claim = await this.claimRepository.findOneBy({
-      id: claimItem.claim.id,
+      id: claimId,
     });
 
     // Update claimitem status to appropriate status
@@ -340,8 +379,12 @@ export class ClaimsService {
         claimItem.claimItemStatus = ClaimItemStatus.APPROVED;
         claimItem.approvedPayableAmount = approvedPayableAmount;
         claimItem.coPayableAmount = coPayableAmount;
-        claim.approvedPayableAmount = approvedPayableAmount;
-        claim.coPayableAmount = coPayableAmount;
+        claim.approvedPayableAmount =
+          parseFloat(claim.approvedPayableAmount.toString()) +
+          parseFloat(approvedPayableAmount.toString());
+        claim.coPayableAmount =
+          parseFloat(claim.coPayableAmount.toString()) +
+          parseFloat(coPayableAmount.toString());
         break;
 
       case AdjudicationItemStatus.REJECTED:
@@ -358,9 +401,12 @@ export class ClaimsService {
     //Save claimItem and claim
     await this.claimItemRepository.save(claimItem);
     await this.claimRepository.save(claim);
+
+    return claim;
   }
 
   async processDocumentUploads(files: Array<Express.Multer.File>) {
+    console.log('Uploading documents...');
     const promises: Promise<FileUploadResponseDto>[] = new Array<
       Promise<FileUploadResponseDto>
     >();

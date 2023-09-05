@@ -4,6 +4,8 @@ import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudic
 
 export class MedicalAdjCompletedEventDto {
   @IsInt()
+  claimId: number;
+  @IsInt()
   claimItemId: number;
   @Type(() => Number)
   approvedPayableAmount: number;

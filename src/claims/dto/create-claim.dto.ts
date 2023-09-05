@@ -34,8 +34,8 @@ export class CreateClaimDto {
   // claimStatus: ClaimStatus;
   @IsEnum(ClaimType)
   claimType: ClaimType;
-  @IsNumber()
-  totalClaimAmount: number;
+  // @IsNumber()
+  // totalClaimAmount: number;
   @ValidateNested()
   @Type(() => TpaPolicyDetailsDto)
   @IsNotEmptyObject()
