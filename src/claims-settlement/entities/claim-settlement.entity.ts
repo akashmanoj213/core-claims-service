@@ -1,6 +1,6 @@
 import { ClaimStatus } from 'src/claims/entities/claim.entity';
-import { ClaimType } from 'src/core/enums';
-import { PaymentStatus } from 'src/core/enums/payment-status.enum';
+import { ClaimType, PaymentStatus } from 'src/core/enums';
+
 import {
   Entity,
   PrimaryGeneratedColumn,

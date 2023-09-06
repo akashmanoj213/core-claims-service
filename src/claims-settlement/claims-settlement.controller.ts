@@ -14,7 +14,7 @@ import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
 import { NotificationService } from 'src/core/providers/notification/notification.service';
 import { PaymentCompletedEventDto } from './dto/payment-completed-event.dto';
-import { PaymentStatus } from 'src/core/enums/payment-status.enum';
+import { PaymentStatus } from 'src/core/enums';
 
 @Controller('claims-settlement')
 export class ClaimsSettlementController {

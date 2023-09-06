@@ -21,9 +21,8 @@ import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { VariationData } from './entities/variation-data-entity';
 import { plainToInstance } from 'class-transformer';
-import { ClaimItemType } from 'src/core/enums';
+import { ClaimItemType, PaymentStatus } from 'src/core/enums';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
-import { PaymentStatus } from 'src/core/enums/payment-status.enum';
 
 @Injectable()
 export class ClaimsService {

@@ -1,5 +1,5 @@
 import { IsEnum, IsInt } from 'class-validator';
-import { PaymentStatus } from '../enums/payment-status.enum';
+import { PaymentStatus } from '../enums';
 
 export class PaymentStatusChangedEventDto {
   @IsInt()
