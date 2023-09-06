@@ -59,6 +59,20 @@ export class AdjudicationItem {
     scale: 2,
   })
   totalClaimAmount: number;
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0.0,
+  })
+  totalApprovedPayableAmount = 0.0;
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0.0,
+  })
+  totalCoPayableAmount = 0.0;
   @Column()
   tpaId: number;
   @Column({

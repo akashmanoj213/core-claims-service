@@ -36,7 +36,7 @@ export class ClaimItemDocumentDto {
   fieldName: string;
 }
 
-export class ClaimInitiatedEventDto {
+export class ClaimItemInitiatedEventDto {
   @IsInt()
   claimId: number;
   @IsInt()
@@ -50,6 +50,12 @@ export class ClaimInitiatedEventDto {
   @IsNumber()
   @Type(() => Number) // TO-DO figure out using build in transformer
   totalClaimAmount: number;
+  @IsNumber()
+  @Type(() => Number)
+  approvedPayableAmount: number;
+  @IsNumber()
+  @Type(() => Number)
+  coPayableAmount: number;
   @IsInt()
   tpaId: number;
   @IsBoolean()
@@ -92,7 +98,7 @@ export class ClaimInitiatedEventDto {
   @Type(() => HospitalDetails)
   hospitalDetails: HospitalDetails;
 
-  constructor(init?: ClaimInitiatedEventDto) {
+  constructor(init?: ClaimItemInitiatedEventDto) {
     Object.assign(this, init);
   }
 }

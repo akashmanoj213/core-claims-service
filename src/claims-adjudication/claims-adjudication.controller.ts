@@ -12,7 +12,7 @@ import {
 import { ClaimsAdjudicationService } from './claims-adjudication.service';
 import { PubSubMessageDto } from 'src/core/dto/pub-sub-message.dto';
 import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
-import { ClaimInitiatedEventDto } from 'src/core/dto/claim-initiated-event.dto';
+import { ClaimItemInitiatedEventDto } from 'src/core/dto/claim-item-initiated-event.dto';
 import {
   AdjudicationItem,
   AdjudicationItemStatus,
@@ -57,10 +57,10 @@ export class ClaimsAdjudicationController {
         message: { data },
       } = pubSubMessage;
 
-      const claimInitiatedEventDto =
-        this.pubSubService.formatMessageData<ClaimInitiatedEventDto>(
+      const claimItemInitiatedEventDto =
+        this.pubSubService.formatMessageData<ClaimItemInitiatedEventDto>(
           data,
-          ClaimInitiatedEventDto,
+          ClaimItemInitiatedEventDto,
         );
 
       const {
@@ -70,6 +70,8 @@ export class ClaimsAdjudicationController {
         claimId,
         claimType,
         totalClaimAmount,
+        approvedPayableAmount,
+        coPayableAmount,
         tpaId,
         isAccident,
         isPregnancy,
@@ -84,7 +86,7 @@ export class ClaimsAdjudicationController {
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         documents: documentsDto,
-      } = claimInitiatedEventDto;
+      } = claimItemInitiatedEventDto;
 
       let documents: AdjudicationItemDocument[],
         patientAdmissionDetails: PatientAdmissionDetails,
@@ -151,6 +153,8 @@ export class ClaimsAdjudicationController {
         hospitalId,
         claimType,
         totalClaimAmount,
+        totalApprovedPayableAmount: approvedPayableAmount,
+        totalCoPayableAmount: coPayableAmount,
         tpaId,
         isAccident,
         isPregnancy,
@@ -330,6 +334,7 @@ export class ClaimsAdjudicationController {
         approvedPayableAmount,
         coPayableAmount,
         decision,
+        overallComment,
         variations: variationsDto,
       } = medicalAdjudicationResultDto;
 
@@ -337,6 +342,7 @@ export class ClaimsAdjudicationController {
         decision,
         approvedPayableAmount,
         coPayableAmount,
+        overallComment,
       });
 
       if (variationsDto && variationsDto.length) {
@@ -367,6 +373,7 @@ export class ClaimsAdjudicationController {
         status,
         approvedPayableAmount,
         coPayableAmount,
+        overallComment,
       });
 
       console.log('Publishing to medical-adj-completed topic...');

@@ -76,6 +76,10 @@ export class ClaimItem {
   @Column({
     nullable: true,
   })
+  medicalAdjudicationResult: string;
+  @Column({
+    nullable: true,
+  })
   medicalFWAResult: string;
   @Column({
     nullable: true,
@@ -99,10 +103,16 @@ export class ClaimItem {
     this.documents = documents;
   }
 
-  approveClaimItem(approvedPayableAmount, coPayableAmount) {
+  updateNonMedicalAdjudicationResult(overallComment) {
+    this.claimItemStatus = ClaimItemStatus.NON_MEDICAL_REVIEW_COMPLETED;
+    this.nonMedicalAdjudicationResult = overallComment;
+  }
+
+  approveClaimItem(approvedPayableAmount, coPayableAmount, overallComment) {
     this.claimItemStatus = ClaimItemStatus.APPROVED;
     this.approvedPayableAmount = approvedPayableAmount;
     this.coPayableAmount = coPayableAmount;
+    this.medicalAdjudicationResult = overallComment;
   }
 
   rejectClaimItem() {

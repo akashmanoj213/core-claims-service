@@ -38,6 +38,8 @@ export class MedicalAdjudicationResult {
     default: 0.0,
   })
   coPayableAmount = 0.0;
+  @Column()
+  overallComment: string;
 
   @OneToOne(
     () => AdjudicationItem,

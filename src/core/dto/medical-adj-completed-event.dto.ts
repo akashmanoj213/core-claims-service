@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt } from 'class-validator';
+import { IsEnum, IsInt, IsString } from 'class-validator';
 import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
 
 export class MedicalAdjCompletedEventDto {
@@ -13,6 +13,8 @@ export class MedicalAdjCompletedEventDto {
   coPayableAmount: number;
   @IsEnum(AdjudicationItemStatus)
   status: AdjudicationItemStatus;
+  @IsString()
+  overallComment: string;
 
   constructor(init?: MedicalAdjCompletedEventDto) {
     Object.assign(this, init);

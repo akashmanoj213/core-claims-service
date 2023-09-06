@@ -28,7 +28,7 @@ import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
 import { PubSubMessageDto } from 'src/core/dto/pub-sub-message.dto';
 import { NonMedicalFWACompletedEventDto } from 'src/core/dto/non-medical-fwa-completed-event.dto';
 import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-completed-event.dto';
-import { ClaimInitiatedEventDto } from 'src/core/dto/claim-initiated-event.dto';
+import { ClaimItemInitiatedEventDto } from 'src/core/dto/claim-item-initiated-event.dto';
 import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-event.dto';
 import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
 import { ClaimItem } from './entities/claim-item.entity';
@@ -272,14 +272,13 @@ export class ClaimsController {
 
       // Continue the process of events only if no variation was detected with the claims data
       if (claimStatus !== ClaimStatus.VARIATIONS_DETECTED) {
-        const claimInitiatedEventDto = await this.prepareClaimInitiatedEventDto(
-          claimItem,
-        );
+        const claimItemInitiatedEventDto =
+          await this.prepareClaimItemInitiatedEventDto(claimItem);
 
         console.log('Publishing to claim-initiated topic ...');
         await this.pubSubService.publishMessage(
           this.CLAIM_INITIATED_TOPIC,
-          claimInitiatedEventDto,
+          claimItemInitiatedEventDto,
         );
 
         return 'Documents uploaded successfully !';
@@ -509,7 +508,7 @@ export class ClaimsController {
     return this.claimsService.remove(+id);
   }
 
-  prepareClaimInitiatedEventDto(claimItem: ClaimItem) {
+  prepareClaimItemInitiatedEventDto(claimItem: ClaimItem) {
     const {
       id: claimItemId,
       totalAmount: claimItemTotalAmount,
@@ -524,6 +523,8 @@ export class ClaimsController {
       insuranceCardNumber,
       tpaId,
       totalClaimAmount,
+      approvedPayableAmount,
+      coPayableAmount,
       hospitalId,
       accidentDetails,
       maternityDetails,
@@ -538,13 +539,15 @@ export class ClaimsController {
     } = claim;
 
     // Including only claim related data. Redundant TPA data is not included.
-    const claimInitiatedEventDto = new ClaimInitiatedEventDto({
+    const claimItemInitiatedEventDto = new ClaimItemInitiatedEventDto({
       claimId,
       policyNumber,
       insuranceCardNumber,
       tpaId,
       hospitalId,
       totalClaimAmount,
+      approvedPayableAmount,
+      coPayableAmount,
       claimType,
       claimItemId,
       claimItemTotalAmount,
@@ -560,14 +563,14 @@ export class ClaimsController {
     });
 
     if (isAccident) {
-      claimInitiatedEventDto.accidentDetails = accidentDetails;
+      claimItemInitiatedEventDto.accidentDetails = accidentDetails;
     }
 
     if (isPregnancy) {
-      claimInitiatedEventDto.maternityDetails = maternityDetails;
+      claimItemInitiatedEventDto.maternityDetails = maternityDetails;
     }
 
-    return claimInitiatedEventDto;
+    return claimItemInitiatedEventDto;
   }
 
   prepareClaimApprovedEventDto(claim: Claim) {

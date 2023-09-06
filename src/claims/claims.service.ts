@@ -325,9 +325,8 @@ export class ClaimsService {
       id: claimItemId,
     });
 
-    // Update claimitem status to non-medical review completed
-    claimItem.claimItemStatus = ClaimItemStatus.NON_MEDICAL_REVIEW_COMPLETED;
-    claimItem.nonMedicalAdjudicationResult = overallComment;
+    // Update claimitem status and add comment
+    claimItem.updateNonMedicalAdjudicationResult(overallComment);
 
     //Save claimItem
     await this.claimItemRepository.save(claimItem);
@@ -363,6 +362,7 @@ export class ClaimsService {
       approvedPayableAmount,
       coPayableAmount,
       claimId,
+      overallComment,
     } = medicalAdjEventDto;
 
     const claimItem = await this.claimItemRepository.findOne({
@@ -381,7 +381,11 @@ export class ClaimsService {
     // Update claimitem status to appropriate status
     switch (status) {
       case AdjudicationItemStatus.APPROVED:
-        claimItem.approveClaimItem(approvedPayableAmount, coPayableAmount);
+        claimItem.approveClaimItem(
+          approvedPayableAmount,
+          coPayableAmount,
+          overallComment,
+        );
         claim.approveClaim(approvedPayableAmount, coPayableAmount);
         break;
 
