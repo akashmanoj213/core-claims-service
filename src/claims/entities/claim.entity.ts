@@ -29,7 +29,9 @@ export enum ClaimStatus {
   INITIATED = 'initiated',
   VARIATIONS_DETECTED = 'variations detected',
   UNDER_REVIEW = 'under review',
-  REVIEW_COMPLETED = 'review completed',
+  // REVIEW_COMPLETED = 'review completed',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
   PAYOUT_INITIATED = 'payout initiated',
   PAYOUT_COMPLETED = 'payout completed',
   COMPLETED = 'completed',
@@ -279,5 +281,29 @@ export class Claim {
     this.totalClaimAmount =
       parseFloat(this.totalClaimAmount.toString()) +
       parseFloat(claimItem.totalAmount.toString());
+  }
+
+  approveClaim(approvedPayableAmount, coPayableAmount) {
+    this.approvedPayableAmount =
+      parseFloat(this.approvedPayableAmount.toString()) +
+      parseFloat(approvedPayableAmount.toString());
+
+    this.coPayableAmount =
+      parseFloat(this.coPayableAmount.toString()) +
+      parseFloat(coPayableAmount.toString());
+
+    this.claimStatus = ClaimStatus.APPROVED;
+  }
+
+  rejectClaim() {
+    this.claimStatus = ClaimStatus.REJECTED;
+  }
+
+  initiatePayment() {
+    this.claimStatus = ClaimStatus.PAYOUT_INITIATED;
+  }
+
+  completePayment() {
+    this.claimStatus = ClaimStatus.PAYOUT_COMPLETED;
   }
 }

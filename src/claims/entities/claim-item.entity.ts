@@ -99,6 +99,16 @@ export class ClaimItem {
     this.documents = documents;
   }
 
+  approveClaimItem(approvedPayableAmount, coPayableAmount) {
+    this.claimItemStatus = ClaimItemStatus.APPROVED;
+    this.approvedPayableAmount = approvedPayableAmount;
+    this.coPayableAmount = coPayableAmount;
+  }
+
+  rejectClaimItem() {
+    this.claimItemStatus = ClaimItemStatus.REJECTED;
+  }
+
   constructor(init?: Partial<ClaimItem>) {
     Object.assign(this, init);
   }

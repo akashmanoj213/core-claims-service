@@ -11,6 +11,12 @@ export class TpaHospitalDetailsDto {
   hospitalPincode: string;
   @IsEmail()
   hospitalEmailId: string;
+  @IsString()
+  bankAccountNumber: string;
+  @IsString()
+  bankIfscCode: string;
+  @IsString()
+  bankAccountName: string;
   @IsInt()
   rohiniId: number;
 }

@@ -22,6 +22,8 @@ import { HospitalDetails } from './entities/hospital-details.entity';
 import { VariationData } from './entities/variation-data-entity';
 import { plainToInstance } from 'class-transformer';
 import { ClaimItemType } from 'src/core/enums';
+import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
+import { PaymentStatus } from 'src/core/enums/payment-status.enum';
 
 @Injectable()
 export class ClaimsService {
@@ -369,40 +371,51 @@ export class ClaimsService {
       },
     });
 
-    const claim = await this.claimRepository.findOneBy({
-      id: claimId,
+    const claim = await this.claimRepository.findOne({
+      where: { id: claimId },
+      relations: {
+        hospitalDetails: true,
+      },
     });
 
     // Update claimitem status to appropriate status
     switch (status) {
       case AdjudicationItemStatus.APPROVED:
-        claimItem.claimItemStatus = ClaimItemStatus.APPROVED;
-        claimItem.approvedPayableAmount = approvedPayableAmount;
-        claimItem.coPayableAmount = coPayableAmount;
-        claim.approvedPayableAmount =
-          parseFloat(claim.approvedPayableAmount.toString()) +
-          parseFloat(approvedPayableAmount.toString());
-        claim.coPayableAmount =
-          parseFloat(claim.coPayableAmount.toString()) +
-          parseFloat(coPayableAmount.toString());
+        claimItem.approveClaimItem(approvedPayableAmount, coPayableAmount);
+        claim.approveClaim(approvedPayableAmount, coPayableAmount);
         break;
 
       case AdjudicationItemStatus.REJECTED:
-        claimItem.claimItemStatus = ClaimItemStatus.REJECTED;
+        claimItem.rejectClaimItem();
+        claim.rejectClaim();
         break;
 
       default:
         break;
     }
 
-    //update claim status to review completed
-    claim.claimStatus = ClaimStatus.REVIEW_COMPLETED;
-
     //Save claimItem and claim
     await this.claimItemRepository.save(claimItem);
     await this.claimRepository.save(claim);
 
     return claim;
+  }
+
+  async updatePaymentStatus(
+    paymentStatusChangedEventDto: PaymentStatusChangedEventDto,
+  ) {
+    console.log('Updating claim payment status...');
+    const { claimId, paymentStatus } = paymentStatusChangedEventDto;
+
+    const claim = await this.claimRepository.findOneBy({ id: claimId });
+
+    if (paymentStatus === PaymentStatus.PENDING) {
+      claim.initiatePayment();
+    } else if (paymentStatus === PaymentStatus.COMPLETED) {
+      claim.completePayment();
+    }
+
+    await this.claimRepository.save(claim);
   }
 
   async processDocumentUploads(files: Array<Express.Multer.File>) {

@@ -23,6 +23,12 @@ export class TpaHospitalDetails {
   @Column()
   hospitalEmailId: string;
   @Column()
+  bankAccountNumber: string;
+  @Column()
+  bankIfscCode: string;
+  @Column()
+  bankAccountName: string;
+  @Column()
   rohiniId: number;
   @CreateDateColumn()
   createdAt?: Date;

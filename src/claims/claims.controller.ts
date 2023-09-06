@@ -35,10 +35,14 @@ import { ClaimItem } from './entities/claim-item.entity';
 import { NotificationService } from 'src/core/providers/notification/notification.service';
 import { CreateEnhancementDto } from './dto/create-enhancement.dto';
 import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
+import { ClaimApprovedEventDto } from 'src/core/dto/claim-approved-event.dto';
+import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
 
 @Controller('claims')
 export class ClaimsController {
-  readonly CLAIM_INITIATED_TOPIC = 'claim-initiated';
+  private readonly CLAIM_INITIATED_TOPIC = 'claim-initiated';
+  private readonly CLAIM_APPROVED_TOPIC = 'claim-approved';
+  private readonly CLAIM_REJECTED_TOPIC = 'claim-rejected';
 
   constructor(
     private readonly claimsService: ClaimsService,
@@ -423,10 +427,47 @@ export class ClaimsController {
         'claim and claimItem status updated with medical adj event ...',
       );
 
-      //if claim.isDischarged ? Then publish purchase related event
+      if (claim.isDischarged) {
+        const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
+
+        console.log('Publishing to claim-approved topic ...');
+        await this.pubSubService.publishMessage(
+          this.CLAIM_APPROVED_TOPIC,
+          claimApprovedEventDto,
+        );
+      }
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while handling non-medical-adj-completed event!',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('payment-status-changed-handler')
+  async paymentStatusChangedHandler(@Body() pubSubMessage: PubSubMessageDto) {
+    console.log('-------------------  -------------------');
+    console.log('Payment status changed hanlder invoked...');
+    try {
+      const {
+        message: { data },
+      } = pubSubMessage;
+
+      const paymentStatusChangedEventDto =
+        this.pubSubService.formatMessageData<PaymentStatusChangedEventDto>(
+          data,
+          PaymentStatusChangedEventDto,
+        );
+
+      await this.claimsService.updatePaymentStatus(
+        paymentStatusChangedEventDto,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error occured while handling payment-status-changed event!',
         {
           cause: error,
           description: error.message,
@@ -468,7 +509,7 @@ export class ClaimsController {
     return this.claimsService.remove(+id);
   }
 
-  async prepareClaimInitiatedEventDto(claimItem: ClaimItem) {
+  prepareClaimInitiatedEventDto(claimItem: ClaimItem) {
     const {
       id: claimItemId,
       totalAmount: claimItemTotalAmount,
@@ -527,6 +568,32 @@ export class ClaimsController {
     }
 
     return claimInitiatedEventDto;
+  }
+
+  prepareClaimApprovedEventDto(claim: Claim) {
+    const {
+      id: claimId,
+      claimType,
+      approvedPayableAmount,
+      coPayableAmount,
+      claimStatus,
+      contactNumber,
+      hospitalDetails: { bankAccountName, bankAccountNumber, bankIfscCode },
+    } = claim;
+
+    const claimApprovedEventDto = new ClaimApprovedEventDto({
+      claimId,
+      claimType,
+      claimStatus,
+      contactNumber,
+      approvedPayableAmount,
+      coPayableAmount,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfscCode,
+    });
+
+    return claimApprovedEventDto;
   }
 
   validateDocumentsList(fieldNames: Array<string>) {

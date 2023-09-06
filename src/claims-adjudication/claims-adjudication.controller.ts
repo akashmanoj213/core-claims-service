@@ -104,13 +104,15 @@ export class ClaimsAdjudicationController {
       if (existingAdjudicationItem) {
         console.log('Using existing database references...');
         documents = existingAdjudicationItem.documents;
+        patientAdmissionDetails =
+          existingAdjudicationItem.patientAdmissionDetails;
         doctorTreatmentDetails =
           existingAdjudicationItem.doctorTreatmentDetails;
+        accidentDetails = existingAdjudicationItem.accidentDetails;
+        maternityDetails = existingAdjudicationItem.maternityDetails;
         policyDetails = existingAdjudicationItem.policyDetails;
         memberDetails = existingAdjudicationItem.memberDetails;
         hospitalDetails = existingAdjudicationItem.hospitalDetails;
-        accidentDetails = existingAdjudicationItem.accidentDetails;
-        maternityDetails = existingAdjudicationItem.maternityDetails;
       } else {
         // need to convert the array inside from DTO to entity as well
         const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
@@ -393,18 +395,38 @@ export class ClaimsAdjudicationController {
     );
   }
 
+  @Get('non-medical-adjudication')
+  getNonMedicalAdjudicationItems() {
+    try {
+      return this.claimsAdjudicationService.getNonMedicalAdjudicationItems();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error occured while fethcing non medical adjudication items !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Get('medical-adjudication')
+  getMedicalAdjudicationItems() {
+    try {
+      return this.claimsAdjudicationService.getMedicalAdjudicationItems();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error occured while fethcing medical adjudication items !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.claimsAdjudicationService.findAdjudicationItem(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string) {
-    return this.claimsAdjudicationService.update(+id);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.claimsAdjudicationService.remove(+id);
   }
 }

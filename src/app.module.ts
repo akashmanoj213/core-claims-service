@@ -6,17 +6,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClaimsAdjudicationModule } from './claims-adjudication/claims-adjudication.module';
 import { CamundaClientService } from './core/providers/camunda-client/camunda-client.service';
 import { ConfigModule } from '@nestjs/config';
+import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      //host: '/cloudsql/pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT),
-      // username: 'sahi-user',
-      // password: 'qwerty',
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: 'Claims',
@@ -25,11 +23,8 @@ import { ConfigModule } from '@nestjs/config';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      //host: '/cloudsql/pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT),
-      // username: 'sahi-user',
-      // password: 'qwerty',
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: 'Claims-Adjudication',
@@ -37,8 +32,20 @@ import { ConfigModule } from '@nestjs/config';
       synchronize: true,
       autoLoadEntities: true,
     }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: 'Claims-Settlement',
+      name: 'claims-settlement',
+      synchronize: true,
+      autoLoadEntities: true,
+    }),
     ClaimsModule,
     ClaimsAdjudicationModule,
+    ClaimsSettlementModule,
   ],
   controllers: [AppController],
   providers: [AppService, CamundaClientService],
