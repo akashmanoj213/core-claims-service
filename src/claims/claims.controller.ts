@@ -174,7 +174,7 @@ export class ClaimsController {
       const claimItem = await this.claimsService.findClaimItem(claimItemId);
 
       // allow file upload only if documents are not uploaded
-      if (claimItem.documents || claimItem.documents.length) {
+      if (claimItem.documents && claimItem.documents.length) {
         throw new Error(
           `There are files already uploaded for claim item ID : ${claimItem.id}`,
         );
