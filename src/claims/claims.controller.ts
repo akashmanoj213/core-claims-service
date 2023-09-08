@@ -37,12 +37,15 @@ import { CreateEnhancementDto } from './dto/create-enhancement.dto';
 import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
 import { ClaimApprovedEventDto } from 'src/core/dto/claim-approved-event.dto';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
+import { PasClaimSyncDto } from './dto/pas-claim-sync.dto';
+import { ClaimItemType } from 'src/core/enums';
 
 @Controller('claims')
 export class ClaimsController {
   private readonly CLAIM_INITIATED_TOPIC = 'claim-initiated';
   private readonly CLAIM_APPROVED_TOPIC = 'claim-approved';
   private readonly CLAIM_REJECTED_TOPIC = 'claim-rejected';
+  private readonly PAS_CLAIM_SYNC_TOPIC = 'pas-claim-sync';
 
   constructor(
     private readonly claimsService: ClaimsService,
@@ -53,7 +56,8 @@ export class ClaimsController {
   @Post()
   async create(@Body() createClaimDto: CreateClaimDto) {
     try {
-      console.log('Create claim API invoked...');
+      console.log('-------------------  -------------------');
+      console.log('Create claim API invoked.');
 
       const {
         tpaId,
@@ -61,7 +65,6 @@ export class ClaimsController {
         insuranceCardNumber,
         policyNumber,
         hospitalId,
-        // totalClaimAmount,
         accidentDetails: accidentDetailsDto,
         maternityDetails: maternityDetailsDto,
         patientAdmissionDetails: patientAdmissionDetailsDto,
@@ -126,27 +129,98 @@ export class ClaimsController {
         claim.maternityDetails = maternityDetails;
       }
 
-      //initiate new claim and check variations
+      // initiate new claim and check variations
       const initiatedClaim = await this.claimsService.initiateAndVerifyClaim(
         claim,
       );
 
       // save new claim
       const savedClaim = await this.claimsService.saveClaim(initiatedClaim);
-      console.log('New claim request saved...');
 
-      console.log('Sending SMS to customer...');
+      // notify customer
       await this.notificationService.sendSMS(
         contactNumber,
         `A new claim with claim ID : ${savedClaim.id} has been initiated and will be reviewed shortly...`,
       );
 
+      // sync to PAS
+      await this.syncToPas(savedClaim.id);
+
       return savedClaim;
     } catch (error) {
-      throw new InternalServerErrorException('Failed to initiate claim !', {
+      console.log(`Failed to create new claim ! Error: ${error.message}`);
+      throw new InternalServerErrorException('Failed to create new claim !', {
         cause: error,
         description: error.message,
       });
+    }
+  }
+
+  @Post('claim-item/:claimItemId/file-upload')
+  @UseInterceptors(AnyFilesInterceptor())
+  async fileUpload(
+    @Param('claimItemId') claimItemId: number,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    console.log('-------------------  -------------------');
+    console.log('fileUpload API invoked.');
+    try {
+      const fieldNames = [];
+
+      files.forEach((file) => {
+        fieldNames.push(file.fieldname);
+      });
+
+      const claimItem = await this.claimsService.findClaimItem(claimItemId);
+
+      // validate document list
+      this.validateDocumentsList(fieldNames, claimItem.claimItemType);
+
+      const documentResponse = await this.claimsService.processDocumentUploads(
+        files,
+      );
+      const documents = Array.from(documentResponse.values());
+      claimItem.addDocuments(documents);
+
+      await this.claimsService.saveClaimItem(claimItem);
+
+      const {
+        claim: { claimStatus, contactNumber, id: claimId },
+      } = claimItem;
+
+      // sync to PAS
+      await this.syncToPas(claimId);
+
+      // continue the processing of events only if no variation was detected with the claims data
+      if (claimStatus !== ClaimStatus.VARIATIONS_DETECTED) {
+        const claimItemInitiatedEventDto =
+          this.prepareClaimItemInitiatedEventDto(claimItem);
+
+        console.log('Publishing to claim-initiated topic.');
+        await this.pubSubService.publishMessage(
+          this.CLAIM_INITIATED_TOPIC,
+          claimItemInitiatedEventDto,
+        );
+
+        return 'Documents uploaded successfully !';
+      }
+
+      // notify customer
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Your claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
+      );
+
+      return 'Documents uploaded successfully but data variations detected in claim values !';
+    } catch (error) {
+      console.log('Error occured during fileUpload or publishing event !');
+      throw new InternalServerErrorException(
+        'Error occured during fileUpload or publishing event !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
     }
   }
 
@@ -156,7 +230,7 @@ export class ClaimsController {
     @Body() createEnhancementDto: CreateEnhancementDto,
   ) {
     try {
-      console.log('addEnhancement API invoked...');
+      console.log('addEnhancement API invoked.');
       const { enhancementAmount } = createEnhancementDto;
 
       const claim = await this.claimsService.createEnhancement(
@@ -171,17 +245,22 @@ export class ClaimsController {
       const enhancementClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
 
       console.log(
-        `New enhancement claim item with id: ${enhancementClaimItem.id} created...`,
+        `New enhancement claim item created ! claimItemId: ${enhancementClaimItem.id}.`,
       );
 
-      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
-        `An enhancement request has been placed for your claim id: ${claimId} and will be reviewed shortly...`,
+        `An enhancement request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
 
       return enhancementClaimItem;
     } catch (error) {
+      console.log(
+        `Failed to create enhancement claim item ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Failed to create enhancement claim item !',
         {
@@ -198,7 +277,7 @@ export class ClaimsController {
     @Body() createFinalSubmissionDto: CreateFinalSubmissionDto,
   ) {
     try {
-      console.log('addFinalSubmission API invoked...');
+      console.log('AddFinalSubmission API invoked.');
       const { remainingAmount } = createFinalSubmissionDto;
 
       const claim = await this.claimsService.createFinalSubmission(
@@ -207,93 +286,27 @@ export class ClaimsController {
       );
 
       const savedClaim = await this.claimsService.saveClaim(claim);
-
       const { contactNumber, claimItems } = savedClaim;
-
       const finalClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
-
       console.log(
-        `Final submission claim item with id: ${finalClaimItem.id} created...`,
+        `Final claim item created! claimItmeId : ${finalClaimItem.id}.`,
       );
 
-      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
-        `A final discharge request has been placed for your claim id: ${claimId} and will be reviewed shortly...`,
+        `A final discharge request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
 
       return finalClaimItem;
     } catch (error) {
+      console.log(
+        `Failed to create final submission claim item ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Failed to create final submission claim item !',
-        {
-          cause: error,
-          description: error.message,
-        },
-      );
-    }
-  }
-
-  @Post('claim-item/:claimItemId/file-upload')
-  @UseInterceptors(AnyFilesInterceptor())
-  async fileUpload(
-    @Param('claimItemId') claimItemId: number,
-    @UploadedFiles() files: Array<Express.Multer.File>,
-  ) {
-    try {
-      console.log('fileUpload API invoked...');
-
-      const fieldNames = [];
-
-      files.forEach((file) => {
-        fieldNames.push(file.fieldname);
-      });
-
-      // validate document list
-      this.validateDocumentsList(fieldNames);
-
-      const documentRespondePromise =
-        this.claimsService.processDocumentUploads(files);
-      const claimItemPromise = this.claimsService.findClaimItem(claimItemId);
-
-      const [documentResponse, claimItem] = await Promise.all([
-        documentRespondePromise,
-        claimItemPromise,
-      ]);
-
-      const documents = Array.from(documentResponse.values());
-      claimItem.addDocuments(documents);
-
-      await this.claimsService.saveClaimItem(claimItem);
-
-      const {
-        claim: { claimStatus, contactNumber, id },
-      } = claimItem;
-
-      // Continue the process of events only if no variation was detected with the claims data
-      if (claimStatus !== ClaimStatus.VARIATIONS_DETECTED) {
-        const claimItemInitiatedEventDto =
-          await this.prepareClaimItemInitiatedEventDto(claimItem);
-
-        console.log('Publishing to claim-initiated topic ...');
-        await this.pubSubService.publishMessage(
-          this.CLAIM_INITIATED_TOPIC,
-          claimItemInitiatedEventDto,
-        );
-
-        return 'Documents uploaded successfully !';
-      }
-
-      console.log('Sending SMS to customer...');
-      await this.notificationService.sendSMS(
-        contactNumber,
-        `Your claim - ${id} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
-      );
-
-      return 'Documents uploaded successfully but data variations detected in claim values !';
-    } catch (error) {
-      throw new InternalServerErrorException(
-        'Error occured during fileUpload or publishing event !',
         {
           cause: error,
           description: error.message,
@@ -305,33 +318,30 @@ export class ClaimsController {
   @Post('non-medical-fwa-handler')
   async nonMedicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Non medical FWA hanlder invoked...');
+    console.log('Non medical FWA hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const nonMedicalFWACompletedEventDto =
         this.pubSubService.formatMessageData<NonMedicalFWACompletedEventDto>(
-          data,
+          pubSubMessage,
           NonMedicalFWACompletedEventDto,
         );
 
-      const { contactNumber, id } =
+      const { contactNumber, id: claimId } =
         await this.claimsService.updateNonMedicalFWAResults(
           nonMedicalFWACompletedEventDto,
         );
 
-      console.log(
-        'Updated claim and claimItem status with non medical FWA event results ...',
-      );
-
-      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
-        `Your claim ID : ${id} is currently under review. You will recieve a message once it is completed.`,
+        `Your claim ID: ${claimId} is currently under review. You will recieve a message once it is completed.`,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while handling non-medical-fwa-completed event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while handling non-medical-fwa-completed event!',
         {
@@ -345,27 +355,28 @@ export class ClaimsController {
   @Post('non-medical-adj-handler')
   async nonMedicalAdjCompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Non medical adj completed hanlder invoked...');
+    console.log('Non medical adj completed hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const nonMedicalAdjEventCompletedDto =
         this.pubSubService.formatMessageData<NonMedicalAdjEventCompletedDto>(
-          data,
+          pubSubMessage,
           NonMedicalAdjEventCompletedDto,
         );
 
-      await this.claimsService.updateNonMedicalAdjesults(
+      const {
+        claim: { id: claimId },
+      } = await this.claimsService.updateNonMedicalAdjResults(
         nonMedicalAdjEventCompletedDto,
       );
-      console.log(
-        'claim and claimItem status updated with non medical adj event ...',
-      );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while handling non-medical-adj-completed event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while handling non-medical-adj-completed event!',
+        'Error occured while handling non-medical-adj-completed event !',
         {
           cause: error,
           description: error.message,
@@ -377,25 +388,28 @@ export class ClaimsController {
   @Post('medical-fwa-handler')
   async medicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Medical FWA hanlder invoked...');
+    console.log('Medical FWA completed hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const medicalFWACompletedEventDto =
         this.pubSubService.formatMessageData<MedicalFWACompletedEventDto>(
-          data,
+          pubSubMessage,
           MedicalFWACompletedEventDto,
         );
 
-      await this.claimsService.updateMedicalFWAResults(
+      const {
+        claim: { id: claimId },
+      } = await this.claimsService.updateMedicalFWAResults(
         medicalFWACompletedEventDto,
       );
-      console.log('claimItem status updated with medical fwa event ...');
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while handling medical-fwa-completed event ! ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while handling medical-fwa-completed event!',
+        'Error occured while handling medical-fwa-completed event !',
         {
           cause: error,
           description: error.message,
@@ -407,37 +421,37 @@ export class ClaimsController {
   @Post('medical-adj-handler')
   async medicalAdjCompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Medical adj hanlder invoked...');
+    console.log('Medical adj completed hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const medicalAdjCompletedEventDto =
         this.pubSubService.formatMessageData<MedicalAdjCompletedEventDto>(
-          data,
+          pubSubMessage,
           MedicalAdjCompletedEventDto,
         );
 
       const claim = await this.claimsService.updateMedicalAdjResults(
         medicalAdjCompletedEventDto,
       );
-      console.log(
-        'claim and claimItem status updated with medical adj event ...',
-      );
+
+      //Sync to PAS
+      await this.syncToPas(claim.id);
 
       if (claim.isDischarged) {
+        console.log('Final claim item approved.');
         const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
 
-        console.log('Publishing to claim-approved topic ...');
+        console.log('Publishing to claim-approved topic.');
         await this.pubSubService.publishMessage(
           this.CLAIM_APPROVED_TOPIC,
           claimApprovedEventDto,
         );
       }
     } catch (error) {
+      console.log(
+        `Error occured while handling medical-adj-completed event ! ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while handling non-medical-adj-completed event!',
+        'Error occured while handling medical-adj-completed event!',
         {
           cause: error,
           description: error.message,
@@ -449,24 +463,26 @@ export class ClaimsController {
   @Post('payment-status-changed-handler')
   async paymentStatusChangedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Payment status changed hanlder invoked...');
+    console.log('Payment status changed hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const paymentStatusChangedEventDto =
         this.pubSubService.formatMessageData<PaymentStatusChangedEventDto>(
-          data,
+          pubSubMessage,
           PaymentStatusChangedEventDto,
         );
 
-      await this.claimsService.updatePaymentStatus(
+      const { id: claimId } = await this.claimsService.updatePaymentStatus(
         paymentStatusChangedEventDto,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while handling payment-status-changed event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while handling payment-status-changed event!',
+        'Error occured while handling payment-status-changed event !',
         {
           cause: error,
           description: error.message,
@@ -498,14 +514,9 @@ export class ClaimsController {
     return this.claimsService.findClaim(id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateClaimDto: UpdateClaimDto) {
-  //   return this.claimsService.update(+id, updateClaimDto);
-  // }
-
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.claimsService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.claimsService.remove(id);
   }
 
   prepareClaimItemInitiatedEventDto(claimItem: ClaimItem) {
@@ -599,28 +610,61 @@ export class ClaimsController {
     return claimApprovedEventDto;
   }
 
-  validateDocumentsList(fieldNames: Array<string>) {
-    console.log('Validating documents list...');
+  validateDocumentsList(
+    fieldNames: Array<string>,
+    claimItemType: ClaimItemType,
+  ) {
+    console.log('Validating documents list.');
 
-    const validDocumentNames = [
+    if (!fieldNames || !fieldNames.length) {
+      throw new Error('Document field names (keys) missing !');
+    }
+
+    const initialClaimDocNames = [
       'pre-authorization form',
       'doctor-prescription',
       'health-card',
     ];
-
-    if (!fieldNames || !fieldNames.length) {
-      throw new Error('Required documents missing : ' + validDocumentNames);
-    }
+    const enhancementClaimDocNames = ['interim-bill'];
+    const finalClaimDocNames = ['discharge-summary', 'detailed-bill-summary'];
 
     const missingDocumentNames = [];
-    validDocumentNames.forEach((validDocument) => {
-      if (!fieldNames.includes(validDocument)) {
-        missingDocumentNames.push(validDocument);
-      }
-    });
 
-    if (missingDocumentNames.length > 0) {
+    switch (claimItemType) {
+      case ClaimItemType.INTIAL:
+        initialClaimDocNames.forEach((docName) => {
+          if (!fieldNames.includes(docName)) missingDocumentNames.push(docName);
+        });
+        break;
+
+      case ClaimItemType.ENHANCEMENT:
+        enhancementClaimDocNames.forEach((docName) => {
+          if (!fieldNames.includes(docName)) missingDocumentNames.push(docName);
+        });
+        break;
+
+      case ClaimItemType.FINAL:
+        finalClaimDocNames.forEach((docName) => {
+          if (!fieldNames.includes(docName)) missingDocumentNames.push(docName);
+        });
+        break;
+
+      default:
+        break;
+    }
+
+    if (missingDocumentNames.length) {
       throw new Error('Required documents missing : ' + missingDocumentNames);
     }
+  }
+
+  async syncToPas(claimId: number) {
+    console.log('Syncing to PAS claims topic.');
+
+    const pasClaimSyncDto = new PasClaimSyncDto(claimId);
+    await this.pubSubService.publishMessage(
+      this.PAS_CLAIM_SYNC_TOPIC,
+      pasClaimSyncDto,
+    );
   }
 }

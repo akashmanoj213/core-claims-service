@@ -3,9 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   InternalServerErrorException,
   Query,
 } from '@nestjs/common';
@@ -35,13 +33,17 @@ import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-
 import { PolicyDetails } from './entities/policy-details.entity';
 import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
+import { PasClaimSyncDto } from 'src/claims/dto/pas-claim-sync.dto';
 
 @Controller('claims-adjudication')
 export class ClaimsAdjudicationController {
-  readonly NON_MEDICAL_FWA_COMPLETED_TOPIC = 'non-medical-fwa-completed';
-  readonly NON_MEDICAL_ADJ_COMPLETED_TOPIC = 'non-medical-adj-completed';
-  readonly MEDICAL_FWA_COMPLETED_TOPIC = 'medical-fwa-completed';
-  readonly MEDICAL_ADJ_COMPLETED_TOPIC = 'medical-adj-completed';
+  private readonly NON_MEDICAL_ADJ_COMPLETED_TOPIC =
+    'non-medical-adj-completed';
+  private readonly NON_MEDICAL_FWA_COMPLETED_TOPIC =
+    'non-medical-fwa-completed';
+  private readonly MEDICAL_FWA_COMPLETED_TOPIC = 'medical-fwa-completed';
+  private readonly MEDICAL_ADJ_COMPLETED_TOPIC = 'medical-adj-completed';
+  private readonly PAS_CLAIM_ADJ_SYNC_TOPIC = 'pas-claim-adj-sync';
 
   constructor(
     private readonly claimsAdjudicationService: ClaimsAdjudicationService,
@@ -51,15 +53,11 @@ export class ClaimsAdjudicationController {
   @Post('claim-initiated-handler')
   async claimInitiatedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('initiated claims hanlder invoked...');
+    console.log('Claim initiated hanlder invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const claimItemInitiatedEventDto =
         this.pubSubService.formatMessageData<ClaimItemInitiatedEventDto>(
-          data,
+          pubSubMessage,
           ClaimItemInitiatedEventDto,
         );
 
@@ -97,17 +95,20 @@ export class ClaimsAdjudicationController {
         memberDetails: MemberDetails,
         hospitalDetails: HospitalDetails;
 
-      //check if an adjudication item already exists for the same claim
-      const existingAdjudicationItem =
-        await this.claimsAdjudicationService.findAdjudicationItemByClaimId(
+      // check if an adjudication item already exists for the same claim
+      const existingAdjudicationItems =
+        await this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
           claimId,
         );
+      const existingAdjudicationItem = existingAdjudicationItems[0];
 
       if (existingAdjudicationItem) {
-        console.log('Using existing database references...');
-        documents = existingAdjudicationItem.documents;
+        console.log(
+          'Reusing existing database references for claim related details.',
+        );
         patientAdmissionDetails =
           existingAdjudicationItem.patientAdmissionDetails;
+        documents = existingAdjudicationItem.documents;
         doctorTreatmentDetails =
           existingAdjudicationItem.doctorTreatmentDetails;
         accidentDetails = existingAdjudicationItem.accidentDetails;
@@ -119,28 +120,23 @@ export class ClaimsAdjudicationController {
         // need to convert the array inside from DTO to entity as well
         const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
           patientAdmissionDetailsDto;
-
         const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
           (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
-        );
-
-        documents = documentsDto.map(
-          (adjudicationItemDocument) =>
-            new AdjudicationItemDocument(adjudicationItemDocument),
         );
 
         patientAdmissionDetails = new PatientAdmissionDetails({
           ...patientAdmissionDetailsDto,
           pastHistoryOfChronicIllness,
         });
-
+        documents = documentsDto.map(
+          (adjudicationItemDocument) =>
+            new AdjudicationItemDocument(adjudicationItemDocument),
+        );
         doctorTreatmentDetails = new DoctorTreatmentDetails(
           doctorTreatmentDetailsDto,
         );
-
         accidentDetails = new AccidentDetails(accidentDetailsDto);
         maternityDetails = new MaternityDetails(maternityDetailsDto);
-
         policyDetails = new PolicyDetails(eventPolicyDetails);
         memberDetails = new MemberDetails(eventMemberDetails);
         hospitalDetails = new HospitalDetails(eventHospitalDetails);
@@ -194,12 +190,15 @@ export class ClaimsAdjudicationController {
         isFailure: status === AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED,
       });
 
-      console.log('Publishing to non-medical-fwa-completed topic ...');
       // Publish to non-medical FWA completed topic
+      console.log('Publishing to non-medical-fwa-completed topic.');
       await this.pubSubService.publishMessage(
         this.NON_MEDICAL_FWA_COMPLETED_TOPIC,
         nonMedicalFwaCompletedEvent,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
       throw new InternalServerErrorException(
         'Error occured while handling initiated-claims event!',
@@ -216,7 +215,7 @@ export class ClaimsAdjudicationController {
     @Body() nonMedicalAdjudicationResultDto: NonMedicalAdjudicationResultDto,
   ) {
     console.log('-------------------  -------------------');
-    console.log('Save non medical adj API called !');
+    console.log('Non medical adj API called !');
     try {
       const {
         variations: variationsDto,
@@ -246,7 +245,6 @@ export class ClaimsAdjudicationController {
           claimItemId,
           nonMedicalAdjudicationResult,
         );
-      console.log('Non medical adjudication results saved...');
 
       const nonMedicalAdjEventCompletedDto = new NonMedicalAdjEventCompletedDto(
         {
@@ -255,15 +253,22 @@ export class ClaimsAdjudicationController {
         },
       );
 
-      console.log('Publishing to non-medical-adj-completed topic...');
       // Publish to non-medical adjudication completed topic
+      console.log('Publishing to non-medical-adj-completed topic.');
       await this.pubSubService.publishMessage(
         this.NON_MEDICAL_ADJ_COMPLETED_TOPIC,
         nonMedicalAdjEventCompletedDto,
       );
 
+      //Sync to PAS
+      const { claimId } = adjudicationItem;
+      await this.syncToPas(claimId);
+
       return adjudicationItem;
     } catch (error) {
+      console.log(
+        `Error occured while saving non medical adjudication result ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while saving non medical adjudication result!',
         {
@@ -281,13 +286,9 @@ export class ClaimsAdjudicationController {
     console.log('-------------------  -------------------');
     console.log('medical FWA initiation handler invoked...');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const nonMedicalAdjCompletedEventDto =
         this.pubSubService.formatMessageData<NonMedicalAdjEventCompletedDto>(
-          data,
+          pubSubMessage,
           NonMedicalAdjEventCompletedDto,
         );
 
@@ -305,15 +306,21 @@ export class ClaimsAdjudicationController {
         isFailure: status === AdjudicationItemStatus.MEDICAL_FWA_FAILED,
       });
 
-      console.log('Publishing to medical-fwa-completed topic ...');
       // Publish to non-medical FWA completed topic
+      console.log('Publishing to medical-fwa-completed topic.');
       await this.pubSubService.publishMessage(
         this.MEDICAL_FWA_COMPLETED_TOPIC,
         medicalFwaCompletedEvent,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while initiating medical FWA ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while initiating medical FWA!',
+        'Error occured while initiating medical FWA !',
         {
           cause: error,
           description: error.message,
@@ -327,7 +334,7 @@ export class ClaimsAdjudicationController {
     @Body() medicalAdjudicationResultDto: MedicalAdjudicationResultDto,
   ) {
     console.log('-------------------  -------------------');
-    console.log('Save medical adj API called !');
+    console.log('Medical adj API called !');
     try {
       const {
         claimItemId,
@@ -363,7 +370,6 @@ export class ClaimsAdjudicationController {
           claimItemId,
           medicalAdjudicationResult,
         );
-      console.log('Medical adjudication results saved...');
 
       const { status, claimId } = adjudicationItem;
 
@@ -376,15 +382,21 @@ export class ClaimsAdjudicationController {
         overallComment,
       });
 
-      console.log('Publishing to medical-adj-completed topic...');
-      // Publish to non-medical adjudication completed topic
+      // publish to medical adjudication completed topic
+      console.log('Publishing to medical-adj-completed topic.');
       await this.pubSubService.publishMessage(
         this.MEDICAL_ADJ_COMPLETED_TOPIC,
         medicalAdjCompletedEventDto,
       );
 
+      // sync to PAS
+      await this.syncToPas(claimId);
+
       return adjudicationItem;
     } catch (error) {
+      console.log(
+        `Error occured while saving medical adjudication result ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while saving medical adjudication result!',
         {
@@ -398,7 +410,14 @@ export class ClaimsAdjudicationController {
   @Get()
   findByClaimitem(@Query('claimItemId') claimItemId: number) {
     return this.claimsAdjudicationService.findAdjudicationItemByClaimItemId(
-      +claimItemId,
+      claimItemId,
+    );
+  }
+
+  @Get('claim/:claimId')
+  findAllByClaimId(@Param('claimId') claimId: number) {
+    return this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
+      claimId,
     );
   }
 
@@ -407,6 +426,9 @@ export class ClaimsAdjudicationController {
     try {
       return this.claimsAdjudicationService.getNonMedicalAdjudicationItems();
     } catch (error) {
+      console.log(
+        `Error occured while fethcing non medical adjudication items ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while fethcing non medical adjudication items !',
         {
@@ -422,8 +444,11 @@ export class ClaimsAdjudicationController {
     try {
       return this.claimsAdjudicationService.getMedicalAdjudicationItems();
     } catch (error) {
+      console.log(
+        `Error occured while fetching medical adjudication items ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
-        'Error occured while fethcing medical adjudication items !',
+        'Error occured while fetching medical adjudication items !',
         {
           cause: error,
           description: error.message,
@@ -433,7 +458,17 @@ export class ClaimsAdjudicationController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.claimsAdjudicationService.findAdjudicationItem(+id);
+  findOne(@Param('id') id: number) {
+    return this.claimsAdjudicationService.findAdjudicationItem(id);
+  }
+
+  async syncToPas(claimId: number) {
+    console.log('Syncing to PAS claims adj topic.');
+
+    const pasClaimSyncDto = new PasClaimSyncDto(claimId);
+    await this.pubSubService.publishMessage(
+      this.PAS_CLAIM_ADJ_SYNC_TOPIC,
+      pasClaimSyncDto,
+    );
   }
 }

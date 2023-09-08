@@ -103,20 +103,53 @@ export class ClaimItem {
     this.documents = documents;
   }
 
-  updateNonMedicalAdjudicationResult(overallComment) {
+  updateNonMedicalFWAResults(
+    nonMedicalFWAResult: string,
+    nonMedicalFWAReason: string,
+    isFailure = false,
+  ) {
+    if (isFailure) {
+      this.claimItemStatus = ClaimItemStatus.NON_MEDICAL_FWA_FAILED;
+    } else {
+      this.claimItemStatus = ClaimItemStatus.NON_MEDICAL_FWA_COMPLETED;
+      this.nonMedicalFWAResult = nonMedicalFWAResult;
+      this.nonMedicalFWAReason = nonMedicalFWAReason;
+    }
+  }
+
+  updateNonMedicalAdjudicationResult(overallComment: string) {
     this.claimItemStatus = ClaimItemStatus.NON_MEDICAL_REVIEW_COMPLETED;
     this.nonMedicalAdjudicationResult = overallComment;
   }
 
-  approveClaimItem(approvedPayableAmount, coPayableAmount, overallComment) {
+  updateMedicalFWAResults(
+    medicalFWAResult: string,
+    medicalFWAReason: string,
+    isFailure: boolean,
+  ) {
+    if (isFailure) {
+      this.claimItemStatus = ClaimItemStatus.MEDICAL_FWA_FAILED;
+    } else {
+      this.claimItemStatus = ClaimItemStatus.MEDICAL_FWA_COMPLETED;
+      this.medicalFWAResult = medicalFWAResult;
+      this.medicalFWAReason = medicalFWAReason;
+    }
+  }
+
+  approveClaimItem(
+    approvedPayableAmount: number,
+    coPayableAmount: number,
+    overallComment: string,
+  ) {
     this.claimItemStatus = ClaimItemStatus.APPROVED;
     this.approvedPayableAmount = approvedPayableAmount;
     this.coPayableAmount = coPayableAmount;
     this.medicalAdjudicationResult = overallComment;
   }
 
-  rejectClaimItem() {
+  rejectClaimItem(overallComment: string) {
     this.claimItemStatus = ClaimItemStatus.REJECTED;
+    this.medicalAdjudicationResult = overallComment;
   }
 
   constructor(init?: Partial<ClaimItem>) {

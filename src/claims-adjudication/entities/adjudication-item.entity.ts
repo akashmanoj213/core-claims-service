@@ -204,26 +204,44 @@ export class AdjudicationItem {
   )
   documents: AdjudicationItemDocument[];
 
-  addNonMedicalFWAResult(fwaResult: string, fwaReason: string) {
-    this.nonMedicalFWAResult = fwaResult;
-    this.nonMedicalFWAReason = fwaReason;
-    this.status = AdjudicationItemStatus.NON_MEDICAL_FWA_COMPLETED;
+  updateNonMedicalFWAResult(
+    nonMedicalFWAResult: string,
+    nonMedicalFWAReason: string,
+    isFailure: boolean,
+  ) {
+    if (isFailure) {
+      this.status = AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED;
+    } else {
+      this.status = AdjudicationItemStatus.NON_MEDICAL_FWA_COMPLETED;
+      this.nonMedicalFWAResult = nonMedicalFWAResult;
+      this.nonMedicalFWAReason = nonMedicalFWAReason;
+    }
   }
 
-  addMedicalFWAResult(fwaResult: string, fwaReason: string) {
-    this.medicalFWAResult = fwaResult;
-    this.medicalFWAReason = fwaReason;
-    this.status = AdjudicationItemStatus.MEDICAL_FWA_COMPLETED;
-  }
-
-  addNonMedicalAdjudicationResult(
+  updateNonMedicalAdjudicationResult(
     adjudicationResult: NonMedicalAdjudicationResult,
   ) {
     this.nonMedicalAdjudicationResult = adjudicationResult;
     this.status = AdjudicationItemStatus.NON_MEDICAL_REVIEW_COMPLETED;
   }
 
-  addMedicalAdjudicationResult(adjudicationResult: MedicalAdjudicationResult) {
+  updateMedicalFWAResult(
+    medicalFWAResult: string,
+    medicalFWAReason: string,
+    isFailure: boolean,
+  ) {
+    if (isFailure) {
+      this.status = AdjudicationItemStatus.MEDICAL_FWA_FAILED;
+    } else {
+      this.status = AdjudicationItemStatus.MEDICAL_FWA_COMPLETED;
+      this.medicalFWAResult = medicalFWAResult;
+      this.medicalFWAReason = medicalFWAReason;
+    }
+  }
+
+  updateMedicalAdjudicationResult(
+    adjudicationResult: MedicalAdjudicationResult,
+  ) {
     this.medicalAdjudicationResult = adjudicationResult;
 
     const { decision, approvedPayableAmount, coPayableAmount } =

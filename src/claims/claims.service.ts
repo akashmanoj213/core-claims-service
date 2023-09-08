@@ -26,9 +26,6 @@ import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-change
 
 @Injectable()
 export class ClaimsService {
-  private readonly MOCK_SERVICE_BASE_URL =
-    'https://mock-service-dnhiaxv6nq-el.a.run.app';
-
   constructor(
     @InjectRepository(Claim)
     private claimRepository: Repository<Claim>,
@@ -97,7 +94,7 @@ export class ClaimsService {
       );
     } else {
       console.log(`No policy found with policy id: ${policyNumber} !`);
-      // Add a variation with fieldName as "PolicyDetails" that signified that there is no policy data found
+      // Add a variation with fieldName as "PolicyDetails" that signifies that there is no policy data found
       const policyVariation = new VariationData({
         sectionName: 'policy',
         fieldName: 'PolicyDetails',
@@ -140,7 +137,7 @@ export class ClaimsService {
         ),
       );
     } else {
-      console.log(`No hospital found with hospital id: ${hospitalId}`);
+      console.log(`No hospital found with hospital id: ${hospitalId} !`);
       // Add a variation with fieldName as "HospitalDetails" that signified that there is no hospital data found
       const variationData = new VariationData({
         sectionName: 'hospital',
@@ -152,7 +149,7 @@ export class ClaimsService {
     }
 
     if (variations.length) {
-      console.log('Variation detected...');
+      console.log('Variation detected !');
       claim.isVariationDetected = true;
       claim.claimStatus = ClaimStatus.VARIATIONS_DETECTED;
       claim.variations = variations;
@@ -177,6 +174,10 @@ export class ClaimsService {
       },
     });
 
+    if (!claim) {
+      throw new Error(`No claim details found with ID: ${claimId}.`);
+    }
+
     const newClaimItem = new ClaimItem({
       totalAmount: enhancementAmount,
       claimItemType: ClaimItemType.ENHANCEMENT,
@@ -195,6 +196,10 @@ export class ClaimsService {
       },
     });
 
+    if (!claim) {
+      throw new Error(`No claim details found with ID: ${claimId}.`);
+    }
+
     const newClaimItem = new ClaimItem({
       totalAmount: remainingAmount,
       claimItemType: ClaimItemType.FINAL,
@@ -207,14 +212,16 @@ export class ClaimsService {
 
   getPolicyDetails(policyId) {
     return firstValueFrom(
-      this.httpService.get(`${this.MOCK_SERVICE_BASE_URL}/policy/${policyId}`),
+      this.httpService.get(
+        `${process.env.MOCK_SERVICE_BASE_URL}/policy/${policyId}`,
+      ),
     ); // Check members is present or not
   }
 
   getHospitalDetails(hospitalId) {
     return firstValueFrom(
       this.httpService.get(
-        `${this.MOCK_SERVICE_BASE_URL}/hospital/${hospitalId}`,
+        `${process.env.MOCK_SERVICE_BASE_URL}/hospital/${hospitalId}`,
       ),
     );
   }
@@ -292,43 +299,44 @@ export class ClaimsService {
       relations: { claimItems: true },
     });
 
-    // Update overall claim status to under review
+    // update overall claim status to under review
     claim.claimStatus = ClaimStatus.UNDER_REVIEW;
     const claimItem = claim.claimItems.find(
       (claimItem) => claimItem.id === claimItemId,
     );
 
-    // Update claimitem status to non-medical fwa completed or failed and nonMedicalFWA results.
-    claimItem.claimItemStatus = isFailure
-      ? ClaimItemStatus.NON_MEDICAL_FWA_FAILED
-      : ClaimItemStatus.NON_MEDICAL_FWA_COMPLETED;
-    claimItem.nonMedicalFWAReason = nonMedicalFWAReason;
-    claimItem.nonMedicalFWAResult = nonMedicalFWAResult;
+    // update claimitem status to non-medical fwa completed or failed and nonMedicalFWA results.
+    claimItem.updateNonMedicalFWAResults(
+      nonMedicalFWAResult,
+      nonMedicalFWAReason,
+      isFailure,
+    );
 
-    //Save claim and claimItem
+    // save claim and claimItem
     await this.claimRepository.save(claim);
+    console.log(`Claim and claim item details updated.`);
 
     return claim;
   }
 
-  async updateNonMedicalAdjesults(
+  async updateNonMedicalAdjResults(
     nonMedicalAdjEventDto: NonMedicalAdjEventCompletedDto,
   ) {
-    console.log(
-      'Updating claim and claimItem status with non medical adj event results ...',
-    );
-
     const { claimItemId, overallComment } = nonMedicalAdjEventDto;
 
-    const claimItem = await this.claimItemRepository.findOneBy({
-      id: claimItemId,
+    const claimItem = await this.claimItemRepository.findOne({
+      where: { id: claimItemId },
+      relations: { claim: true },
     });
 
     // Update claimitem status and add comment
     claimItem.updateNonMedicalAdjudicationResult(overallComment);
 
     //Save claimItem
-    await this.claimItemRepository.save(claimItem);
+    const result = await this.claimItemRepository.save(claimItem);
+    console.log(`Claim item details updated.`);
+
+    return result;
   }
 
   async updateMedicalFWAResults(
@@ -339,17 +347,21 @@ export class ClaimsService {
 
     const claimItem = await this.claimItemRepository.findOne({
       where: { id: claimItemId },
+      relations: { claim: true },
     });
 
-    // Update claimitem status to medical fwa completed or failed from MedicalFWA results.
-    claimItem.claimItemStatus = isFailure
-      ? ClaimItemStatus.MEDICAL_FWA_FAILED
-      : ClaimItemStatus.MEDICAL_FWA_COMPLETED;
-    claimItem.medicalFWAResult = medicalFWAResult;
-    claimItem.medicalFWAReason = medicalFWAReason;
+    // update claimitem status to medical fwa completed or failed from MedicalFWA results.
+    claimItem.updateMedicalFWAResults(
+      medicalFWAResult,
+      medicalFWAReason,
+      isFailure,
+    );
 
-    //Save claimItem
+    // save claimItem
     await this.claimItemRepository.save(claimItem);
+    console.log(`Claim item details updated.`);
+
+    return claimItem;
   }
 
   async updateMedicalAdjResults(
@@ -389,7 +401,7 @@ export class ClaimsService {
         break;
 
       case AdjudicationItemStatus.REJECTED:
-        claimItem.rejectClaimItem();
+        claimItem.rejectClaimItem(overallComment);
         claim.rejectClaim();
         break;
 
@@ -400,6 +412,7 @@ export class ClaimsService {
     //Save claimItem and claim
     await this.claimItemRepository.save(claimItem);
     await this.claimRepository.save(claim);
+    console.log('Claim and claimItem details updated.');
 
     return claim;
   }
@@ -407,7 +420,6 @@ export class ClaimsService {
   async updatePaymentStatus(
     paymentStatusChangedEventDto: PaymentStatusChangedEventDto,
   ) {
-    console.log('Updating claim payment status...');
     const { claimId, paymentStatus } = paymentStatusChangedEventDto;
 
     const claim = await this.claimRepository.findOneBy({ id: claimId });
@@ -419,21 +431,24 @@ export class ClaimsService {
     }
 
     await this.claimRepository.save(claim);
+    console.log('Claim status updated.');
+
+    return claim;
   }
 
   async processDocumentUploads(files: Array<Express.Multer.File>) {
-    console.log('Uploading documents...');
+    console.log('Uploading documents.');
+
     const promises: Promise<FileUploadResponseDto>[] = new Array<
       Promise<FileUploadResponseDto>
     >();
-
     files.forEach((file) => {
       promises.push(this.fileUploadService.uploadFile(file));
     });
 
     const documentResponses = new Map<string, ClaimItemDocument>();
-
     const fileUploadResponses = await Promise.all(promises);
+    console.log('Upload completed.');
 
     fileUploadResponses.forEach((fileUploadResponse) => {
       const { fieldName, fileName, fileUrl, message } = fileUploadResponse;
@@ -479,7 +494,9 @@ export class ClaimsService {
         tpaMemberDetails: true,
         tpaHospitalDetails: true,
         doctorTreatmentDetails: true,
-        patientAdmissionDetails: true,
+        patientAdmissionDetails: {
+          pastHistoryOfChronicIllness: true,
+        },
         patientDeclaration: true,
         doctorDeclaration: true,
         hospitalDeclaration: true,
@@ -494,7 +511,7 @@ export class ClaimsService {
   }
 
   findClaimItem(id: number) {
-    return this.claimItemRepository.findOne({
+    const result = this.claimItemRepository.findOne({
       where: {
         id,
       },
@@ -518,16 +535,26 @@ export class ClaimsService {
         documents: true,
       },
     });
+
+    if (!result) {
+      throw new Error(`No claim item detials found with ID: ${id}`);
+    }
+
+    return result;
   }
 
-  saveClaim(claim: Claim) {
-    console.log('Saving claim...');
-    return this.claimRepository.save(claim);
+  async saveClaim(claim: Claim) {
+    const result = await this.claimRepository.save(claim);
+
+    console.log(`Claim saved! claimId: ${result.id}.`);
+    return result;
   }
 
-  saveClaimItem(claimItem: ClaimItem) {
-    console.log('Saving claimItem...');
-    return this.claimItemRepository.save(claimItem);
+  async saveClaimItem(claimItem: ClaimItem) {
+    const result = await this.claimItemRepository.save(claimItem);
+
+    console.log(`Claim item saved! claimItemId: ${result.id}.`);
+    return result;
   }
 
   remove(id: number) {

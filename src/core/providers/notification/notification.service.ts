@@ -8,6 +8,8 @@ export class NotificationService {
   constructor(private pubSubService: PubSubService) {}
 
   async sendSMS(receiverNumber: string, body: string) {
+    console.log('Sending SMS to customer.');
+
     const attributes = {
       type: 'SMS',
     };
@@ -26,15 +28,15 @@ export class NotificationService {
           messageBody,
           attributes,
         );
-        console.log(`SMS messages successfully sent to ${receiverNumber}...`);
+        console.log(`SMS messages successfully sent to ${receiverNumber}.`);
       } else {
-        console.log(`SMS messaging disabled...`);
+        console.log(`SMS messaging disabled.`);
       }
 
       return messageId;
     } catch (error) {
       console.log(
-        `Failed to send SMS to ${receiverNumber} due to : ${error.message}`,
+        `Failed to send SMS to ${receiverNumber} due to : ${error.message}.`,
       );
     }
   }

@@ -15,10 +15,13 @@ import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-change
 import { NotificationService } from 'src/core/providers/notification/notification.service';
 import { PaymentCompletedEventDto } from './dto/payment-completed-event.dto';
 import { PaymentStatus } from 'src/core/enums';
+import { PasClaimSettlementSyncDto } from './dto/pas-claim-settlement-sync.dto';
 
 @Controller('claims-settlement')
 export class ClaimsSettlementController {
   private readonly PAYMENT_STATUS_CHANGED_TOPIC = 'payment-status-changed';
+  private readonly PAS_CLAIM_SETTLEMENT_SYNC_TOPIC =
+    'pas-claim-settlement-sync';
 
   constructor(
     private pubSubService: PubSubService,
@@ -29,16 +32,12 @@ export class ClaimsSettlementController {
   @Post('claim-approved-handler')
   async claimApprovedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Claim approved hanlder invoked...');
+    console.log('Claim approved hanlder invoked.');
 
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const claimApprovedEventDto =
         this.pubSubService.formatMessageData<ClaimApprovedEventDto>(
-          data,
+          pubSubMessage,
           ClaimApprovedEventDto,
         );
 
@@ -49,7 +48,11 @@ export class ClaimsSettlementController {
       const existingClaimSettlement =
         await this.claimsSettlementService.findOneByClaimId(claimId);
       if (existingClaimSettlement) {
-        // return;
+        const { paymentId } = existingClaimSettlement;
+        console.log(
+          `Payment with ID: ${paymentId} already initiated for claim ID: ${claimId}`,
+        );
+        return existingClaimSettlement;
       }
 
       // Initiate payment
@@ -62,12 +65,12 @@ export class ClaimsSettlementController {
         paymentId,
       });
 
-      await this.claimsSettlementService.save(claimSettlement);
+      const { id: claimSettlementId } = await this.claimsSettlementService.save(
+        claimSettlement,
+      );
 
       // notify customer
-      console.log('Sending SMS to customer...');
       const smsBody = `Your claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`;
-
       await this.notificationService.sendSMS(
         contactNumber,
         coPayableAmount
@@ -76,16 +79,22 @@ export class ClaimsSettlementController {
       );
 
       //publish to payment-status-changed-topic
+      console.log('Publishing to payment-status-changed topic.');
       const paymentStatusChangedEventDto = new PaymentStatusChangedEventDto({
         claimId,
         paymentStatus: PaymentStatus.PENDING,
       });
-      console.log('Publishing to payment-status-changed topic...');
       await this.pubSubService.publishMessage(
         this.PAYMENT_STATUS_CHANGED_TOPIC,
         paymentStatusChangedEventDto,
       );
+
+      //Sync to PAS
+      await this.syncToPas(claimSettlementId);
     } catch (error) {
+      console.log(
+        `Error occured while handling claim-approved event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while handling claim-approved event !',
         {
@@ -99,50 +108,52 @@ export class ClaimsSettlementController {
   @Post('cashless-claim-payment-completed-handler')
   async paymentCompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Payment completed handler invoked...');
+    console.log('Payment completed handler invoked.');
     try {
-      const {
-        message: { data },
-      } = pubSubMessage;
-
       const paymentCompletedEventDto =
         this.pubSubService.formatMessageData<PaymentCompletedEventDto>(
-          data,
+          pubSubMessage,
           PaymentCompletedEventDto,
         );
 
       const { uniqueTransactionId: claimId, paymentId } =
         paymentCompletedEventDto;
 
-      //check if already executed
+      // check if already executed
       const claimSettlement =
         await this.claimsSettlementService.findOneByClaimId(claimId);
       if (claimSettlement.paymentStatus === PaymentStatus.COMPLETED) {
-        return;
+        console.log(`Payment already completed for paymentId: ${paymentId}`);
+        return claimSettlement;
       }
 
       await this.claimsSettlementService.completePayment(claimSettlement);
 
-      const { contactNumber } = claimSettlement;
+      const { contactNumber, id: claimSettlementId } = claimSettlement;
 
       // notify customer
-      console.log('Sending SMS to customer...');
       await this.notificationService.sendSMS(
         contactNumber,
         `The payment for your claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
       );
 
-      //publish to payment-status-changed-topic
+      // publish to payment-status-changed-topic
+      console.log('Publishing to payment-status-changed topic.');
       const paymentStatusChangedEventDto = new PaymentStatusChangedEventDto({
         claimId,
         paymentStatus: PaymentStatus.COMPLETED,
       });
-      console.log('Publishing to payment-status-changed topic...');
       await this.pubSubService.publishMessage(
         this.PAYMENT_STATUS_CHANGED_TOPIC,
         paymentStatusChangedEventDto,
       );
+
+      // sync to PAS
+      await this.syncToPas(claimSettlementId);
     } catch (error) {
+      console.log(
+        `Error occured while handling payment completed event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while handling payment completed event !',
         {
@@ -153,13 +164,25 @@ export class ClaimsSettlementController {
     }
   }
 
+  async syncToPas(claimSettlementId: number) {
+    console.log('Syncing to PAS claims settlement topic.');
+
+    const pasClaimSettlementSyncDto = new PasClaimSettlementSyncDto(
+      claimSettlementId,
+    );
+    await this.pubSubService.publishMessage(
+      this.PAS_CLAIM_SETTLEMENT_SYNC_TOPIC,
+      pasClaimSettlementSyncDto,
+    );
+  }
+
   @Get()
   findAll() {
     return this.claimsSettlementService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.claimsSettlementService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.claimsSettlementService.findOne(id);
   }
 }

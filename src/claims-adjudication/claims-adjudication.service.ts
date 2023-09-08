@@ -29,6 +29,7 @@ export class ClaimsAdjudicationService {
   ) {}
 
   async performNonMedicalFWA(adjudicationItem: AdjudicationItem) {
+    console.log('Performing non-medical FWA.');
     const { policyDetails, hospitalDetails, claimItemTotalAmount } =
       adjudicationItem;
 
@@ -39,8 +40,12 @@ export class ClaimsAdjudicationService {
       sumInsured: policyDetails.sumInsured,
     };
 
+    let nonMedicalFWAResult,
+      nonMedicalFWAReason,
+      isFailure = false;
+
     try {
-      console.log('Non medical adjudication rule engine invoked...');
+      console.log('Non medical FWA rule engine invoked.');
       const {
         nonMedFWADecision: { fwaDecision, fwaReason },
       } = await this.camundaClientService.getOutcome<NonMedicalFWAOutcomeDto>(
@@ -48,18 +53,60 @@ export class ClaimsAdjudicationService {
         fwaProcessParams,
       );
 
-      console.log('Rule engine result:', fwaDecision);
+      nonMedicalFWAResult = fwaDecision;
+      nonMedicalFWAReason = fwaReason;
 
-      adjudicationItem.addNonMedicalFWAResult(fwaDecision, fwaReason);
+      console.log('Rule engine result: ', nonMedicalFWAResult);
     } catch (error) {
-      console.log('Error occured while running non medical FWA rule engine');
-      adjudicationItem.status = AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED;
+      console.log(
+        `Error occured while running non medical FWA rule engine ! Error: ${error.message}`,
+      );
+      isFailure = true;
     }
+
+    adjudicationItem.updateNonMedicalFWAResult(
+      nonMedicalFWAResult,
+      nonMedicalFWAReason,
+      isFailure,
+    );
+
+    return adjudicationItem;
+  }
+
+  async saveNonMedicalAdjResult(
+    claimItemId: number,
+    nonMedicalAdjudicationResult: NonMedicalAdjudicationResult,
+  ) {
+    const adjudicationItem = await this.adjudicationItemRepository.findOneBy({
+      claimItemId: claimItemId,
+    });
+
+    if (!adjudicationItem) {
+      throw new Error(
+        `Adjudication item not found for claim item ID: ${claimItemId}. Please complete file upload for the claim item`,
+      );
+    }
+
+    // Save non medical adjudication results only after non medical FWA performed
+    if (
+      adjudicationItem.status !==
+        AdjudicationItemStatus.NON_MEDICAL_FWA_COMPLETED &&
+      adjudicationItem.status !== AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED
+    ) {
+      throw new Error('Non medical adjudication API called out of order !');
+    }
+
+    adjudicationItem.updateNonMedicalAdjudicationResult(
+      nonMedicalAdjudicationResult,
+    );
+    await this.adjudicationItemRepository.save(adjudicationItem);
+    console.log('Non medical adjudication result saved.');
 
     return adjudicationItem;
   }
 
   async performMedicalFWA(claimItemId: number) {
+    console.log('Performing medical FWA.');
     // Fetch AdjudicationItem
     const adjudicationItem = await this.adjudicationItemRepository.findOne({
       where: { claimItemId: claimItemId },
@@ -79,6 +126,10 @@ export class ClaimsAdjudicationService {
       claimAmount: parseFloat(claimItemTotalAmount.toString()),
     };
 
+    let medicalFWAResult,
+      medicalFWAReason,
+      isFailure = false;
+
     try {
       console.log('Medical adjudication rule engine invoked...');
       const {
@@ -87,32 +138,27 @@ export class ClaimsAdjudicationService {
         this.MEDICAL_FWA_PROCESS_ID,
         fwaProcessParams,
       );
-      console.log('Rule engine result:', fwaDecision);
 
-      adjudicationItem.addMedicalFWAResult(fwaDecision, fwaReason);
+      medicalFWAResult = fwaDecision;
+      medicalFWAReason = fwaReason;
+
+      console.log('Rule engine result: ', medicalFWAResult);
     } catch (error) {
-      console.log('Error occured while running medical FWA rule engine');
-      adjudicationItem.status = AdjudicationItemStatus.MEDICAL_FWA_FAILED;
+      console.log(
+        `Error occured while running medical FWA rule engine ! Error: ${error.message}`,
+      );
+      isFailure = true;
     }
+
+    adjudicationItem.updateMedicalFWAResult(
+      medicalFWAResult,
+      medicalFWAReason,
+      isFailure,
+    );
 
     // save adjudication item
     await this.adjudicationItemRepository.save(adjudicationItem);
-    console.log('Medical FWA decision saved against adjudicationItem...');
-
-    return adjudicationItem;
-  }
-
-  async saveNonMedicalAdjResult(
-    claimItemId: number,
-    nonMedicalAdjudicationResult: NonMedicalAdjudicationResult,
-  ) {
-    const adjudicationItem = await this.adjudicationItemRepository.findOneBy({
-      claimItemId: claimItemId,
-    });
-    adjudicationItem.addNonMedicalAdjudicationResult(
-      nonMedicalAdjudicationResult,
-    );
-    await this.adjudicationItemRepository.save(adjudicationItem);
+    console.log('Medical FWA result saved.');
 
     return adjudicationItem;
   }
@@ -125,16 +171,28 @@ export class ClaimsAdjudicationService {
       claimItemId: claimItemId,
     });
 
-    adjudicationItem.addMedicalAdjudicationResult(medicalAdjudicationResult);
+    // save medical adjudication results only after medical FWA performed
+    if (
+      adjudicationItem.status !==
+        AdjudicationItemStatus.MEDICAL_FWA_COMPLETED &&
+      adjudicationItem.status !== AdjudicationItemStatus.MEDICAL_FWA_FAILED
+    ) {
+      throw new Error('Medical adjudication API called out of order !');
+    }
+
+    adjudicationItem.updateMedicalAdjudicationResult(medicalAdjudicationResult);
 
     await this.adjudicationItemRepository.save(adjudicationItem);
+    console.log('Medical adjudication result saved.');
 
     return adjudicationItem;
   }
 
   async saveAdjudicationItem(adjudicationItem: AdjudicationItem) {
-    console.log('Saving adjudication item...');
-    await this.adjudicationItemRepository.save(adjudicationItem);
+    const result = await this.adjudicationItemRepository.save(adjudicationItem);
+    console.log(`Adjudication item saved! adjudicationItemId: ${result.id}.`);
+
+    return result;
   }
 
   async findAdjudicationItem(id: number) {
@@ -181,8 +239,8 @@ export class ClaimsAdjudicationService {
     });
   }
 
-  async findAdjudicationItemByClaimId(claimId: number) {
-    return await this.adjudicationItemRepository.findOne({
+  async findAdjudicationItemsByClaimId(claimId: number) {
+    return await this.adjudicationItemRepository.find({
       where: {
         claimId,
       },

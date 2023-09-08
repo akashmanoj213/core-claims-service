@@ -220,17 +220,18 @@ export class Claim {
   addNewClaimItem(claimItem: ClaimItem) {
     claimItem.claimItemStatus = ClaimItemStatus.INITIATED;
 
+    //One or more claimitems already present
     if (this.claimItems && this.claimItems.length) {
       // Check if any claim item is under review
       this.claimItems.sort((a, b) => b.id - a.id);
       const latestClaimItem = this.claimItems[0];
-
-      if (
-        latestClaimItem.claimItemStatus !== ClaimItemStatus.APPROVED &&
-        latestClaimItem.claimItemStatus !== ClaimItemStatus.REJECTED
-      ) {
+      const termianlStates = [
+        ClaimItemStatus.APPROVED,
+        ClaimItemStatus.REJECTED,
+      ];
+      if (!termianlStates.includes(latestClaimItem.claimItemStatus)) {
         throw new Error(
-          'A new claim item cannot be added as another claim item is already under review !',
+          `A new claim item cannot be added as another claim item (${latestClaimItem.id}) is currently under review !`,
         );
       }
 
@@ -243,7 +244,7 @@ export class Claim {
         }
       } else if (claimItem.claimItemType === ClaimItemType.INTIAL) {
         throw new Error("Claim item with type 'initial' already exists !");
-      } else {
+      } else if (claimItem.claimItemType === ClaimItemType.FINAL) {
         if (this.isDischarged) {
           throw new Error("Claim item with type 'final' already exists !");
         }
@@ -253,6 +254,7 @@ export class Claim {
 
       this.claimItems.push(claimItem);
     } else {
+      // no claim items present
       if (claimItem.claimItemType === ClaimItemType.INTIAL) {
         if (
           !this.patientAdmissionDetails ||

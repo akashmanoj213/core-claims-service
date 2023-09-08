@@ -10,10 +10,6 @@ import { ClaimApprovedEventDto } from 'src/core/dto/claim-approved-event.dto';
 
 @Injectable()
 export class ClaimsSettlementService {
-  private readonly MOCK_SERVICE_BASE_URL =
-    'https://mock-service-dnhiaxv6nq-el.a.run.app';
-  // 'http://localhost:8080';
-
   constructor(
     @InjectRepository(ClaimSettlement, 'claims-settlement')
     private claimSettlementRepository: Repository<ClaimSettlement>,
@@ -21,8 +17,6 @@ export class ClaimsSettlementService {
   ) {}
 
   async initiatePayment(claimApprovedEventDto: ClaimApprovedEventDto) {
-    console.log('Initiating payment...');
-
     const {
       approvedPayableAmount,
       bankAccountName,
@@ -46,25 +40,31 @@ export class ClaimsSettlementService {
 
     const { data: paymentId } = await firstValueFrom(
       this.httpService.post(
-        `${this.MOCK_SERVICE_BASE_URL}/payment/initiate`,
+        `${process.env.MOCK_SERVICE_BASE_URL}/payment/initiate`,
         initiatePaymentDto,
       ),
     );
+    console.log(`Payment initiated! paymentId: ${paymentId}.`);
 
     return paymentId as number;
   }
 
   async completePayment(claimSettlement: ClaimSettlement) {
-    console.log('Updating payment to completed...');
-
     claimSettlement.completePayment();
 
-    await this.claimSettlementRepository.save(claimSettlement);
+    const result = await this.claimSettlementRepository.save(claimSettlement);
+    console.log(`Payment conpleted and claim settlement data updated.`);
+
+    return result;
   }
 
-  save(claimSettlment: ClaimSettlement) {
-    console.log('Saving claim settlement data...');
-    return this.claimSettlementRepository.save(claimSettlment);
+  async save(claimSettlment: ClaimSettlement) {
+    const result = await this.claimSettlementRepository.save(claimSettlment);
+    console.log(
+      `Claim Item settlement saved! ClaimSettlementId: ${result.id}.`,
+    );
+
+    return result;
   }
 
   findAll() {

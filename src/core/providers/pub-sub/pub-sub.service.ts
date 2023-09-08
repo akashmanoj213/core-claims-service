@@ -1,6 +1,7 @@
 import { PubSub } from '@google-cloud/pubsub';
 import { Injectable } from '@nestjs/common';
 import { ClassConstructor, plainToClass } from 'class-transformer';
+import { PubSubMessageDto } from 'src/core/dto/pub-sub-message.dto';
 
 @Injectable()
 export class PubSubService {
@@ -37,7 +38,14 @@ export class PubSubService {
     }
   }
 
-  formatMessageData<T>(data: string, resourceType: ClassConstructor<T>): T {
+  formatMessageData<T>(
+    pubSubMessage: PubSubMessageDto,
+    resourceType: ClassConstructor<T>,
+  ): T {
+    const {
+      message: { data },
+    } = pubSubMessage;
+
     const bufferObj = Buffer.from(data, 'base64');
     const decodedData = bufferObj.toString('utf8');
     const jsonObj = JSON.parse(decodedData);
