@@ -509,6 +509,11 @@ export class ClaimsController {
     );
   }
 
+  @Get()
+  findAll() {
+    return this.claimsService.findAll();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.claimsService.findClaim(id);

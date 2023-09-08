@@ -468,17 +468,23 @@ export class ClaimsService {
   findAll() {
     return this.claimRepository.find({
       relations: {
-        claimItems: true,
+        claimItems: { documents: true },
         tpaPolicyDetails: true,
         tpaMemberDetails: true,
         tpaHospitalDetails: true,
         doctorTreatmentDetails: true,
-        patientAdmissionDetails: true,
+        patientAdmissionDetails: {
+          pastHistoryOfChronicIllness: true,
+        },
         patientDeclaration: true,
         doctorDeclaration: true,
         hospitalDeclaration: true,
         maternityDetails: true,
         accidentDetails: true,
+        policyDetails: true,
+        hospitalDetails: true,
+        memberDetails: true,
+        variations: true,
       },
     });
   }
