@@ -31,7 +31,7 @@ import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-com
 import { ClaimItemInitiatedEventDto } from 'src/core/dto/claim-item-initiated-event.dto';
 import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-event.dto';
 import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
-import { ClaimItem } from './entities/claim-item.entity';
+import { ClaimItem, ClaimItemStatus } from './entities/claim-item.entity';
 import { NotificationService } from 'src/core/providers/notification/notification.service';
 import { CreateEnhancementDto } from './dto/create-enhancement.dto';
 import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
@@ -172,6 +172,13 @@ export class ClaimsController {
       });
 
       const claimItem = await this.claimsService.findClaimItem(claimItemId);
+
+      // allow file upload only if documents are not uploaded
+      if (claimItem.documents || claimItem.documents.length) {
+        throw new Error(
+          `There are files already uploaded for claim item ID : ${claimItem.id}`,
+        );
+      }
 
       // validate document list
       this.validateDocumentsList(fieldNames, claimItem.claimItemType);
