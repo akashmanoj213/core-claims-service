@@ -109,7 +109,12 @@ export class Claim {
     type: 'boolean',
     default: false,
   })
-  isDischarged = false;
+  isInstantCashless = false;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isFinal = false;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
@@ -222,6 +227,12 @@ export class Claim {
 
     //One or more claimitems already present
     if (this.claimItems && this.claimItems.length) {
+      if (this.isInstantCashless) {
+        throw new Error(
+          `A new claim item cannot be added as an instant cashless claim can have only one claim item present.`,
+        );
+      }
+
       // Check if any claim item is under review
       this.claimItems.sort((a, b) => b.id - a.id);
       const latestClaimItem = this.claimItems[0];
@@ -245,11 +256,11 @@ export class Claim {
       } else if (claimItem.claimItemType === ClaimItemType.INTIAL) {
         throw new Error("Claim item with type 'initial' already exists !");
       } else if (claimItem.claimItemType === ClaimItemType.FINAL) {
-        if (this.isDischarged) {
+        if (this.isFinal) {
           throw new Error("Claim item with type 'final' already exists !");
         }
 
-        this.isDischarged = true;
+        this.isFinal = true;
       }
 
       this.claimItems.push(claimItem);
@@ -264,20 +275,26 @@ export class Claim {
             'patientAdmissionDetails.sumTotalExpectedHospitalisationCost has to be a positive value !',
           );
         }
-
-        claimItem.totalAmount = parseFloat(
-          this.patientAdmissionDetails.sumTotalExpectedHospitalisationCost.toString(),
-        );
-        this.claimItems = [claimItem];
       } else if (claimItem.claimItemType === ClaimItemType.ENHANCEMENT) {
         throw new Error(
           "An 'enhancement' claim item cannot be added to a claim without an 'initial' claim item !",
         );
       } else {
-        throw new Error(
-          "A 'final' claim item cannot be added to a claim without an 'initial' claim item !",
-        );
+        // if instant cashless claim , only one claim item will be present which of type FINAL
+        if (!this.isInstantCashless) {
+          throw new Error(
+            "A 'final' claim item cannot be added to a claim without an 'initial' claim item !",
+          );
+        }
+
+        this.isFinal = true;
       }
+
+      claimItem.totalAmount = parseFloat(
+        this.patientAdmissionDetails.sumTotalExpectedHospitalisationCost.toString(),
+      );
+
+      this.claimItems = [claimItem];
     }
 
     this.totalClaimAmount =

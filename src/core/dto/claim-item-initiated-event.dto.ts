@@ -62,6 +62,8 @@ export class ClaimItemInitiatedEventDto {
   isAccident = false;
   @IsBoolean()
   isPregnancy = false;
+  @IsBoolean()
+  isInstantCashless = false;
   @IsInt()
   claimItemId: number;
   @IsEnum(ClaimItemType)

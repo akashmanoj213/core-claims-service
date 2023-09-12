@@ -125,7 +125,7 @@ export class ClaimItem {
   updateMedicalFWAResults(
     medicalFWAResult: string,
     medicalFWAReason: string,
-    isFailure: boolean,
+    isFailure = false,
   ) {
     if (isFailure) {
       this.claimItemStatus = ClaimItemStatus.MEDICAL_FWA_FAILED;

@@ -39,6 +39,9 @@ import { ClaimApprovedEventDto } from 'src/core/dto/claim-approved-event.dto';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
 import { PasClaimSyncDto } from './dto/pas-claim-sync.dto';
 import { ClaimItemType } from 'src/core/enums';
+import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
+import { ClaimRejectedEventDto } from 'src/core/dto/claim-rejected-event.dto';
+import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashless-fwa-completed.dto';
 
 @Controller('claims')
 export class ClaimsController {
@@ -46,6 +49,8 @@ export class ClaimsController {
   private readonly CLAIM_APPROVED_TOPIC = 'claim-approved';
   private readonly CLAIM_REJECTED_TOPIC = 'claim-rejected';
   private readonly PAS_CLAIM_SYNC_TOPIC = 'pas-claim-sync';
+  private readonly INSTANT_CASHLESS_CLAIM_INITIATED_TOPIC =
+    'instant-cashless-claim-initiated';
 
   constructor(
     private readonly claimsService: ClaimsService,
@@ -140,7 +145,11 @@ export class ClaimsController {
       // notify customer
       await this.notificationService.sendSMS(
         contactNumber,
-        `A new claim with claim ID : ${savedClaim.id} has been initiated and will be reviewed shortly...`,
+        `A new claim with claim ID : ${
+          savedClaim.id
+        } has been initiated and will be ${
+          savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+        } shortly...`,
       );
 
       // sync to PAS
@@ -172,6 +181,10 @@ export class ClaimsController {
       });
 
       const claimItem = await this.claimsService.findClaimItem(claimItemId);
+      const {
+        claim: { claimStatus, contactNumber, id: claimId, isInstantCashless },
+        claimItemType,
+      } = claimItem;
 
       // allow file upload only if documents are not uploaded
       if (claimItem.documents && claimItem.documents.length) {
@@ -181,7 +194,7 @@ export class ClaimsController {
       }
 
       // validate document list
-      this.validateDocumentsList(fieldNames, claimItem.claimItemType);
+      this.validateDocumentsList(fieldNames, claimItemType, isInstantCashless);
 
       const documentResponse = await this.claimsService.processDocumentUploads(
         files,
@@ -191,10 +204,6 @@ export class ClaimsController {
 
       await this.claimsService.saveClaimItem(claimItem);
 
-      const {
-        claim: { claimStatus, contactNumber, id: claimId },
-      } = claimItem;
-
       // sync to PAS
       await this.syncToPas(claimId);
 
@@ -203,11 +212,19 @@ export class ClaimsController {
         const claimItemInitiatedEventDto =
           this.prepareClaimItemInitiatedEventDto(claimItem);
 
-        console.log('Publishing to claim-initiated topic.');
-        await this.pubSubService.publishMessage(
-          this.CLAIM_INITIATED_TOPIC,
-          claimItemInitiatedEventDto,
-        );
+        if (isInstantCashless) {
+          console.log('Publishing to instant-cashless-claim-initiated topic.');
+          await this.pubSubService.publishMessage(
+            this.INSTANT_CASHLESS_CLAIM_INITIATED_TOPIC,
+            claimItemInitiatedEventDto,
+          );
+        } else {
+          console.log('Publishing to claim-initiated topic.');
+          await this.pubSubService.publishMessage(
+            this.CLAIM_INITIATED_TOPIC,
+            claimItemInitiatedEventDto,
+          );
+        }
 
         return 'Documents uploaded successfully !';
       }
@@ -260,7 +277,7 @@ export class ClaimsController {
         `An enhancement request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
       );
 
-      //Sync to PAS
+      // sync to PAS
       await this.syncToPas(claimId);
 
       return enhancementClaimItem;
@@ -409,7 +426,7 @@ export class ClaimsController {
         medicalFWACompletedEventDto,
       );
 
-      //Sync to PAS
+      // sync to PAS
       await this.syncToPas(claimId);
     } catch (error) {
       console.log(
@@ -443,15 +460,36 @@ export class ClaimsController {
       //Sync to PAS
       await this.syncToPas(claim.id);
 
-      if (claim.isDischarged) {
-        console.log('Final claim item approved.');
-        const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
+      const { status } = medicalAdjCompletedEventDto;
 
-        console.log('Publishing to claim-approved topic.');
-        await this.pubSubService.publishMessage(
-          this.CLAIM_APPROVED_TOPIC,
-          claimApprovedEventDto,
-        );
+      switch (status) {
+        case AdjudicationItemStatus.APPROVED:
+          if (claim.isFinal) {
+            console.log('Final claim item approved.');
+            const claimApprovedEventDto =
+              this.prepareClaimApprovedEventDto(claim);
+
+            console.log('Publishing to claim-approved topic.');
+            await this.pubSubService.publishMessage(
+              this.CLAIM_APPROVED_TOPIC,
+              claimApprovedEventDto,
+            );
+          }
+          break;
+
+        case AdjudicationItemStatus.REJECTED:
+          console.log('Claim Item rejected !');
+          const claimRejectedEventDto =
+            this.prepareClaimRejectedEventDto(claim);
+
+          console.log('Publishing to claim-rejected topic.');
+          await this.pubSubService.publishMessage(
+            this.CLAIM_REJECTED_TOPIC,
+            claimRejectedEventDto,
+          );
+
+        default:
+          break;
       }
     } catch (error) {
       console.log(
@@ -490,6 +528,48 @@ export class ClaimsController {
       );
       throw new InternalServerErrorException(
         'Error occured while handling payment-status-changed event !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('instant-cashless-fwa-completed-handler')
+  async instantCashlessFWACompletedHandler(
+    @Body() pubSubMessage: PubSubMessageDto,
+  ) {
+    console.log('-------------------  -------------------');
+    console.log('instant cashless fwa completed hanlder invoked.');
+
+    try {
+      const instantCashlessFWACompletedEventDto =
+        this.pubSubService.formatMessageData<InstantCashlessFWACompletedEventDto>(
+          pubSubMessage,
+          InstantCashlessFWACompletedEventDto,
+        );
+
+      const claim = await this.claimsService.updateAllFWAResults(
+        instantCashlessFWACompletedEventDto,
+      );
+
+      const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
+
+      console.log('Publishing to claim-approved topic.');
+      await this.pubSubService.publishMessage(
+        this.CLAIM_APPROVED_TOPIC,
+        claimApprovedEventDto,
+      );
+
+      // sync to PAS
+      await this.syncToPas(claim.id);
+    } catch (error) {
+      console.log(
+        `Error occured while handling instant-cashless-fwa-completed event ! ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while handling instant-cashless-fwa-completed event !',
         {
           cause: error,
           description: error.message,
@@ -559,6 +639,7 @@ export class ClaimsController {
       policyDetails,
       hospitalDetails,
       memberDetails,
+      isInstantCashless,
     } = claim;
 
     // Including only claim related data. Redundant TPA data is not included.
@@ -583,6 +664,7 @@ export class ClaimsController {
       hospitalDetails,
       memberDetails,
       documents,
+      isInstantCashless,
     });
 
     if (isAccident) {
@@ -602,7 +684,7 @@ export class ClaimsController {
       claimType,
       approvedPayableAmount,
       coPayableAmount,
-      claimStatus,
+      claimStatus, // check if required, else combine this and claimRejectedDtp
       contactNumber,
       hospitalDetails: { bankAccountName, bankAccountNumber, bankIfscCode },
     } = claim;
@@ -622,9 +704,34 @@ export class ClaimsController {
     return claimApprovedEventDto;
   }
 
+  prepareClaimRejectedEventDto(claim: Claim) {
+    const {
+      id: claimId,
+      claimType,
+      approvedPayableAmount,
+      coPayableAmount,
+      contactNumber,
+      hospitalDetails: { bankAccountName, bankAccountNumber, bankIfscCode },
+    } = claim;
+
+    const claimRejectedEventDto = new ClaimRejectedEventDto({
+      claimId,
+      claimType,
+      contactNumber,
+      approvedPayableAmount,
+      coPayableAmount,
+      bankAccountName,
+      bankAccountNumber,
+      bankIfscCode,
+    });
+
+    return claimRejectedEventDto;
+  }
+
   validateDocumentsList(
     fieldNames: Array<string>,
     claimItemType: ClaimItemType,
+    isInstantCashless = false,
   ) {
     console.log('Validating documents list.');
 
@@ -656,7 +763,11 @@ export class ClaimsController {
         break;
 
       case ClaimItemType.FINAL:
-        finalClaimDocNames.forEach((docName) => {
+        const docNames = isInstantCashless
+          ? initialClaimDocNames
+          : finalClaimDocNames;
+
+        docNames.forEach((docName) => {
           if (!fieldNames.includes(docName)) missingDocumentNames.push(docName);
         });
         break;

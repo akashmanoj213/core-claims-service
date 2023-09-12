@@ -85,6 +85,11 @@ export class AdjudicationItem {
     default: false,
   })
   isPregnancy = false;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isInstantCashless = false;
   @Column()
   claimItemId: number;
   @Column({
@@ -209,6 +214,17 @@ export class AdjudicationItem {
     nonMedicalFWAReason: string,
     isFailure: boolean,
   ) {
+    // save non medical FWA results only if its performed initially or after non-medical fwa failure
+    if (
+      !this.isInstantCashless &&
+      this.status &&
+      this.status !== AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED
+    ) {
+      throw new Error(
+        'Non medical FWA results cannot be updated at this stage of the adjudication item !',
+      );
+    }
+
     if (isFailure) {
       this.status = AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED;
     } else {
@@ -221,6 +237,18 @@ export class AdjudicationItem {
   updateNonMedicalAdjudicationResult(
     adjudicationResult: NonMedicalAdjudicationResult,
   ) {
+    // save non medical adjudication results only after non medical FWA performed
+    if (
+      !(
+        this.status === AdjudicationItemStatus.NON_MEDICAL_FWA_COMPLETED ||
+        this.status === AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED
+      )
+    ) {
+      throw new Error(
+        'Non medical adjudication results cannot be updated at this stage of the adjudication item !',
+      );
+    }
+
     this.nonMedicalAdjudicationResult = adjudicationResult;
     this.status = AdjudicationItemStatus.NON_MEDICAL_REVIEW_COMPLETED;
   }
@@ -230,6 +258,19 @@ export class AdjudicationItem {
     medicalFWAReason: string,
     isFailure: boolean,
   ) {
+    // save medical FWA results only if its performed after non-medical review completed or after non medical fwa completed or failed (in case of isPrivileged)
+    if (
+      !(
+        this.isInstantCashless ||
+        this.status === AdjudicationItemStatus.NON_MEDICAL_REVIEW_COMPLETED ||
+        this.status === AdjudicationItemStatus.MEDICAL_FWA_FAILED
+      )
+    ) {
+      throw new Error(
+        'Medical adjudication results cannot be updated at this stage of the adjudication item !',
+      );
+    }
+
     if (isFailure) {
       this.status = AdjudicationItemStatus.MEDICAL_FWA_FAILED;
     } else {
@@ -242,6 +283,18 @@ export class AdjudicationItem {
   updateMedicalAdjudicationResult(
     adjudicationResult: MedicalAdjudicationResult,
   ) {
+    // save medical adjudication results only after medical FWA performed
+    if (
+      !(
+        this.status === AdjudicationItemStatus.MEDICAL_FWA_COMPLETED ||
+        this.status === AdjudicationItemStatus.MEDICAL_FWA_FAILED
+      )
+    ) {
+      throw new Error(
+        'Medical adjudication results cannot be updated at this stage of the adjudication item !',
+      );
+    }
+
     this.medicalAdjudicationResult = adjudicationResult;
 
     const { decision, approvedPayableAmount, coPayableAmount } =

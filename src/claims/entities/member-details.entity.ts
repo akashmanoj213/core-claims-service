@@ -63,6 +63,11 @@ export class MemberDetails {
   memberWaitingPeriod: number;
   @Column()
   numberOfClaims: number;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isInstantCashless = false;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()

@@ -1,4 +1,4 @@
-import { IsEmail, IsInt, IsString } from 'class-validator';
+import { IsBoolean, IsEmail, IsInt, IsString } from 'class-validator';
 
 export class HospitalDetailsDto {
   @IsInt()
@@ -19,4 +19,6 @@ export class HospitalDetailsDto {
   bankAccountName: string;
   @IsInt()
   rohiniId: number;
+  @IsBoolean()
+  isInstantCashless: boolean;
 }

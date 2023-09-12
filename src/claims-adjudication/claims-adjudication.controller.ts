@@ -34,6 +34,7 @@ import { PolicyDetails } from './entities/policy-details.entity';
 import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { PasClaimSyncDto } from 'src/claims/dto/pas-claim-sync.dto';
+import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashless-fwa-completed.dto';
 
 @Controller('claims-adjudication')
 export class ClaimsAdjudicationController {
@@ -44,6 +45,8 @@ export class ClaimsAdjudicationController {
   private readonly MEDICAL_FWA_COMPLETED_TOPIC = 'medical-fwa-completed';
   private readonly MEDICAL_ADJ_COMPLETED_TOPIC = 'medical-adj-completed';
   private readonly PAS_CLAIM_ADJ_SYNC_TOPIC = 'pas-claim-adj-sync';
+  private readonly INSTANT_CASHLESS_FWA_COMPLETED_TOPIC =
+    'instant-cashless-fwa-completed';
 
   constructor(
     private readonly claimsAdjudicationService: ClaimsAdjudicationService,
@@ -61,126 +64,25 @@ export class ClaimsAdjudicationController {
           ClaimItemInitiatedEventDto,
         );
 
-      const {
-        policyNumber,
-        insuranceCardNumber,
-        hospitalId,
-        claimId,
-        claimType,
-        totalClaimAmount,
-        approvedPayableAmount,
-        coPayableAmount,
-        tpaId,
-        isAccident,
-        isPregnancy,
-        claimItemId,
-        claimItemTotalAmount,
-        claimItemType,
-        policyDetails: eventPolicyDetails,
-        hospitalDetails: eventHospitalDetails,
-        memberDetails: eventMemberDetails,
-        doctorTreatmentDetails: doctorTreatmentDetailsDto,
-        patientAdmissionDetails: patientAdmissionDetailsDto,
-        accidentDetails: accidentDetailsDto,
-        maternityDetails: maternityDetailsDto,
-        documents: documentsDto,
-      } = claimItemInitiatedEventDto;
-
-      let documents: AdjudicationItemDocument[],
-        patientAdmissionDetails: PatientAdmissionDetails,
-        doctorTreatmentDetails: DoctorTreatmentDetails,
-        accidentDetails: AccidentDetails,
-        maternityDetails: MaternityDetails,
-        policyDetails: PolicyDetails,
-        memberDetails: MemberDetails,
-        hospitalDetails: HospitalDetails;
-
-      // check if an adjudication item already exists for the same claim
-      const existingAdjudicationItems =
-        await this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
-          claimId,
-        );
-      const existingAdjudicationItem = existingAdjudicationItems[0];
-
-      if (existingAdjudicationItem) {
-        console.log(
-          'Reusing existing database references for claim related details.',
-        );
-        patientAdmissionDetails =
-          existingAdjudicationItem.patientAdmissionDetails;
-        documents = existingAdjudicationItem.documents;
-        doctorTreatmentDetails =
-          existingAdjudicationItem.doctorTreatmentDetails;
-        accidentDetails = existingAdjudicationItem.accidentDetails;
-        maternityDetails = existingAdjudicationItem.maternityDetails;
-        policyDetails = existingAdjudicationItem.policyDetails;
-        memberDetails = existingAdjudicationItem.memberDetails;
-        hospitalDetails = existingAdjudicationItem.hospitalDetails;
-      } else {
-        // need to convert the array inside from DTO to entity as well
-        const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
-          patientAdmissionDetailsDto;
-        const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
-          (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
-        );
-
-        patientAdmissionDetails = new PatientAdmissionDetails({
-          ...patientAdmissionDetailsDto,
-          pastHistoryOfChronicIllness,
-        });
-        documents = documentsDto.map(
-          (adjudicationItemDocument) =>
-            new AdjudicationItemDocument(adjudicationItemDocument),
-        );
-        doctorTreatmentDetails = new DoctorTreatmentDetails(
-          doctorTreatmentDetailsDto,
-        );
-        accidentDetails = new AccidentDetails(accidentDetailsDto);
-        maternityDetails = new MaternityDetails(maternityDetailsDto);
-        policyDetails = new PolicyDetails(eventPolicyDetails);
-        memberDetails = new MemberDetails(eventMemberDetails);
-        hospitalDetails = new HospitalDetails(eventHospitalDetails);
-      }
-
-      const adjudicationItem = new AdjudicationItem({
-        claimId,
-        policyNumber,
-        insuranceCardNumber,
-        hospitalId,
-        claimType,
-        totalClaimAmount,
-        totalApprovedPayableAmount: approvedPayableAmount,
-        totalCoPayableAmount: coPayableAmount,
-        tpaId,
-        isAccident,
-        isPregnancy,
-        claimItemId,
-        claimItemTotalAmount,
-        claimItemType,
-        doctorTreatmentDetails,
-        patientAdmissionDetails,
-        documents,
-        policyDetails,
-        memberDetails,
-        hospitalDetails,
-      });
-
-      if (isAccident) {
-        adjudicationItem.accidentDetails = accidentDetails;
-      }
-
-      if (isPregnancy) {
-        adjudicationItem.maternityDetails = maternityDetails;
-      }
+      const adjudicationItem = await this.prepareAdjudicationItem(
+        claimItemInitiatedEventDto,
+      );
 
       // perform non medical FWA
       const result = await this.claimsAdjudicationService.performNonMedicalFWA(
         adjudicationItem,
       );
 
+      // save adjudication item
       await this.claimsAdjudicationService.saveAdjudicationItem(result);
 
-      const { nonMedicalFWAResult, nonMedicalFWAReason, status } = result;
+      const {
+        claimId,
+        claimItemId,
+        nonMedicalFWAResult,
+        nonMedicalFWAReason,
+        status,
+      } = result;
 
       const nonMedicalFwaCompletedEvent = new NonMedicalFWACompletedEventDto({
         claimId,
@@ -200,8 +102,94 @@ export class ClaimsAdjudicationController {
       //Sync to PAS
       await this.syncToPas(claimId);
     } catch (error) {
+      console.log(
+        `Error occured while handling initiated-claims event ! Error: ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured while handling initiated-claims event!',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('instant-cashless-claim-initiated-handler')
+  async instantCashlessClaimInitiatedHandler(
+    @Body() pubSubMessage: PubSubMessageDto,
+  ) {
+    console.log('-------------------  -------------------');
+    console.log('Instant cashless claim initiated hanlder invoked.');
+    try {
+      const claimItemInitiatedEventDto =
+        this.pubSubService.formatMessageData<ClaimItemInitiatedEventDto>(
+          pubSubMessage,
+          ClaimItemInitiatedEventDto,
+        );
+
+      const adjudicationItem = await this.prepareAdjudicationItem(
+        claimItemInitiatedEventDto,
+      );
+
+      if (
+        adjudicationItem.nonMedicalFWAResult &&
+        adjudicationItem.medicalFWAResult
+      ) {
+        console.log(
+          `Non medical and medical FWA already performed for adjudicationItem ID: ${adjudicationItem.id}`,
+        );
+        return;
+      }
+
+      // perform non medical FWA
+      const nonMedicalFWAPromise =
+        this.claimsAdjudicationService.performNonMedicalFWA(adjudicationItem);
+
+      const medicalFWAPromise =
+        this.claimsAdjudicationService.performMedicalFWA(adjudicationItem);
+
+      await Promise.all([nonMedicalFWAPromise, medicalFWAPromise]);
+
+      // save after performing both checks
+      await this.claimsAdjudicationService.saveAdjudicationItem(
+        adjudicationItem,
+      );
+
+      const {
+        nonMedicalFWAResult,
+        nonMedicalFWAReason,
+        medicalFWAReason,
+        medicalFWAResult,
+        claimId,
+        claimItemId,
+      } = adjudicationItem;
+
+      const instantCashlessFWACompletedEventDto =
+        new InstantCashlessFWACompletedEventDto({
+          claimId,
+          claimItemId,
+          nonMedicalFWAReason,
+          nonMedicalFWAResult,
+          medicalFWAReason,
+          medicalFWAResult,
+        });
+
+      // publish to instant-cashless-fwa-completed topic
+      console.log('Publishing to instant-cashless-fwa-completed topic.');
+      await this.pubSubService.publishMessage(
+        this.INSTANT_CASHLESS_FWA_COMPLETED_TOPIC,
+        instantCashlessFWACompletedEventDto,
+      );
+
+      // sync to PAS
+      await this.syncToPas(claimId);
+    } catch (error) {
+      console.log(
+        `Error occured while handling instant-cashless-claim-initiated event ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while handling instant-cashless-claim-initiated event!',
         {
           cause: error,
           description: error.message,
@@ -295,8 +283,19 @@ export class ClaimsAdjudicationController {
       // perform medical adjudication
       const { claimItemId } = nonMedicalAdjCompletedEventDto;
 
-      const { medicalFWAResult, medicalFWAReason, status, claimId } =
-        await this.claimsAdjudicationService.performMedicalFWA(claimItemId);
+      const adjudicationItem =
+        await this.claimsAdjudicationService.findAdjudicationItemByClaimItemId(
+          claimItemId,
+        );
+
+      const result = await this.claimsAdjudicationService.performMedicalFWA(
+        adjudicationItem,
+      );
+
+      // save adjudication item
+      await this.claimsAdjudicationService.saveAdjudicationItem(result);
+
+      const { medicalFWAResult, medicalFWAReason, status, claimId } = result;
 
       const medicalFwaCompletedEvent = new MedicalFWACompletedEventDto({
         claimId,
@@ -460,6 +459,125 @@ export class ClaimsAdjudicationController {
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.claimsAdjudicationService.findAdjudicationItem(id);
+  }
+
+  async prepareAdjudicationItem(
+    claimItemInitiatedEventDto: ClaimItemInitiatedEventDto,
+  ) {
+    const {
+      policyNumber,
+      insuranceCardNumber,
+      hospitalId,
+      claimId,
+      claimType,
+      totalClaimAmount,
+      approvedPayableAmount,
+      coPayableAmount,
+      tpaId,
+      isAccident,
+      isPregnancy,
+      claimItemId,
+      claimItemTotalAmount,
+      claimItemType,
+      policyDetails: eventPolicyDetails,
+      hospitalDetails: eventHospitalDetails,
+      memberDetails: eventMemberDetails,
+      doctorTreatmentDetails: doctorTreatmentDetailsDto,
+      patientAdmissionDetails: patientAdmissionDetailsDto,
+      accidentDetails: accidentDetailsDto,
+      maternityDetails: maternityDetailsDto,
+      documents: documentsDto,
+      isInstantCashless,
+    } = claimItemInitiatedEventDto;
+
+    let documents: AdjudicationItemDocument[],
+      patientAdmissionDetails: PatientAdmissionDetails,
+      doctorTreatmentDetails: DoctorTreatmentDetails,
+      accidentDetails: AccidentDetails,
+      maternityDetails: MaternityDetails,
+      policyDetails: PolicyDetails,
+      memberDetails: MemberDetails,
+      hospitalDetails: HospitalDetails;
+
+    // check if an adjudication item already exists for the same claim
+    const existingAdjudicationItems =
+      await this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
+        claimId,
+      );
+    const existingAdjudicationItem = existingAdjudicationItems[0];
+
+    if (existingAdjudicationItem) {
+      console.log(
+        'Reusing existing database references for claim related details.',
+      );
+      patientAdmissionDetails =
+        existingAdjudicationItem.patientAdmissionDetails;
+      documents = existingAdjudicationItem.documents;
+      doctorTreatmentDetails = existingAdjudicationItem.doctorTreatmentDetails;
+      accidentDetails = existingAdjudicationItem.accidentDetails;
+      maternityDetails = existingAdjudicationItem.maternityDetails;
+      policyDetails = existingAdjudicationItem.policyDetails;
+      memberDetails = existingAdjudicationItem.memberDetails;
+      hospitalDetails = existingAdjudicationItem.hospitalDetails;
+    } else {
+      // need to convert the array inside from DTO to entity as well
+      const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
+        patientAdmissionDetailsDto;
+      const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
+        (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
+      );
+
+      patientAdmissionDetails = new PatientAdmissionDetails({
+        ...patientAdmissionDetailsDto,
+        pastHistoryOfChronicIllness,
+      });
+      documents = documentsDto.map(
+        (adjudicationItemDocument) =>
+          new AdjudicationItemDocument(adjudicationItemDocument),
+      );
+      doctorTreatmentDetails = new DoctorTreatmentDetails(
+        doctorTreatmentDetailsDto,
+      );
+      accidentDetails = new AccidentDetails(accidentDetailsDto);
+      maternityDetails = new MaternityDetails(maternityDetailsDto);
+      policyDetails = new PolicyDetails(eventPolicyDetails);
+      memberDetails = new MemberDetails(eventMemberDetails);
+      hospitalDetails = new HospitalDetails(eventHospitalDetails);
+    }
+
+    const adjudicationItem = new AdjudicationItem({
+      claimId,
+      policyNumber,
+      insuranceCardNumber,
+      hospitalId,
+      claimType,
+      totalClaimAmount,
+      totalApprovedPayableAmount: approvedPayableAmount,
+      totalCoPayableAmount: coPayableAmount,
+      tpaId,
+      isAccident,
+      isPregnancy,
+      claimItemId,
+      claimItemTotalAmount,
+      claimItemType,
+      doctorTreatmentDetails,
+      patientAdmissionDetails,
+      documents,
+      policyDetails,
+      memberDetails,
+      hospitalDetails,
+      isInstantCashless,
+    });
+
+    if (isAccident) {
+      adjudicationItem.accidentDetails = accidentDetails;
+    }
+
+    if (isPregnancy) {
+      adjudicationItem.maternityDetails = maternityDetails;
+    }
+
+    return adjudicationItem;
   }
 
   async syncToPas(claimId: number) {

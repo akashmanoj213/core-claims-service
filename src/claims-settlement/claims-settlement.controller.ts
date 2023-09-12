@@ -16,6 +16,7 @@ import { NotificationService } from 'src/core/providers/notification/notificatio
 import { PaymentCompletedEventDto } from './dto/payment-completed-event.dto';
 import { PaymentStatus } from 'src/core/enums';
 import { PasClaimSettlementSyncDto } from './dto/pas-claim-settlement-sync.dto';
+import { ClaimRejectedEventDto } from 'src/core/dto/claim-rejected-event.dto';
 
 @Controller('claims-settlement')
 export class ClaimsSettlementController {
@@ -97,6 +98,43 @@ export class ClaimsSettlementController {
       );
       throw new InternalServerErrorException(
         'Error occured while handling claim-approved event !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('claim-rejected-handler')
+  async claimRejectedHandler(@Body() pubSubMessage: PubSubMessageDto) {
+    console.log('-------------------  -------------------');
+    console.log('Claim rejected hanlder invoked.');
+
+    try {
+      const claimRejectedEventDto =
+        this.pubSubService.formatMessageData<ClaimRejectedEventDto>(
+          pubSubMessage,
+          ClaimRejectedEventDto,
+        );
+
+      const { contactNumber, approvedPayableAmount, claimId } =
+        claimRejectedEventDto;
+
+      const message =
+        approvedPayableAmount == 0
+          ? `Unfortunately, your claim ID: ${claimId} has been rejected. Please make your payment at the hospital.`
+          : `Your claim ID: ${claimId} has only been partially approved for an amount of ${approvedPayableAmount}. Please contact the hospital to make payment for the remaining amount.`;
+
+      await this.notificationService.sendSMS(contactNumber, message);
+
+      // figure out how to make partial payments
+    } catch (error) {
+      console.log(
+        `Error occured while handling claim-rejected event ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while handling claim-rejected event !',
         {
           cause: error,
           description: error.message,

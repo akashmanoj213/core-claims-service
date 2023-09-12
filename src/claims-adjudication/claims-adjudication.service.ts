@@ -56,7 +56,7 @@ export class ClaimsAdjudicationService {
       nonMedicalFWAResult = fwaDecision;
       nonMedicalFWAReason = fwaReason;
 
-      console.log('Rule engine result: ', nonMedicalFWAResult);
+      console.log('Non medical adj rule engine result: ', nonMedicalFWAResult);
     } catch (error) {
       console.log(
         `Error occured while running non medical FWA rule engine ! Error: ${error.message}`,
@@ -87,15 +87,6 @@ export class ClaimsAdjudicationService {
       );
     }
 
-    // Save non medical adjudication results only after non medical FWA performed
-    if (
-      adjudicationItem.status !==
-        AdjudicationItemStatus.NON_MEDICAL_FWA_COMPLETED &&
-      adjudicationItem.status !== AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED
-    ) {
-      throw new Error('Non medical adjudication API called out of order !');
-    }
-
     adjudicationItem.updateNonMedicalAdjudicationResult(
       nonMedicalAdjudicationResult,
     );
@@ -105,15 +96,8 @@ export class ClaimsAdjudicationService {
     return adjudicationItem;
   }
 
-  async performMedicalFWA(claimItemId: number) {
+  async performMedicalFWA(adjudicationItem: AdjudicationItem) {
     console.log('Performing medical FWA.');
-    // Fetch AdjudicationItem
-    const adjudicationItem = await this.adjudicationItemRepository.findOne({
-      where: { claimItemId: claimItemId },
-      relations: {
-        doctorTreatmentDetails: true,
-      },
-    });
 
     const {
       claimItemTotalAmount,
@@ -131,7 +115,7 @@ export class ClaimsAdjudicationService {
       isFailure = false;
 
     try {
-      console.log('Medical adjudication rule engine invoked...');
+      console.log('Medical adjudication rule engine invoked.');
       const {
         medFWADecision: { fwaDecision, fwaReason },
       } = await this.camundaClientService.getOutcome<MedicalFWAOutcomeDto>(
@@ -142,7 +126,7 @@ export class ClaimsAdjudicationService {
       medicalFWAResult = fwaDecision;
       medicalFWAReason = fwaReason;
 
-      console.log('Rule engine result: ', medicalFWAResult);
+      console.log('Medical adj rule engine result: ', medicalFWAResult);
     } catch (error) {
       console.log(
         `Error occured while running medical FWA rule engine ! Error: ${error.message}`,
@@ -156,10 +140,6 @@ export class ClaimsAdjudicationService {
       isFailure,
     );
 
-    // save adjudication item
-    await this.adjudicationItemRepository.save(adjudicationItem);
-    console.log('Medical FWA result saved.');
-
     return adjudicationItem;
   }
 
@@ -170,15 +150,6 @@ export class ClaimsAdjudicationService {
     const adjudicationItem = await this.adjudicationItemRepository.findOneBy({
       claimItemId: claimItemId,
     });
-
-    // save medical adjudication results only after medical FWA performed
-    if (
-      adjudicationItem.status !==
-        AdjudicationItemStatus.MEDICAL_FWA_COMPLETED &&
-      adjudicationItem.status !== AdjudicationItemStatus.MEDICAL_FWA_FAILED
-    ) {
-      throw new Error('Medical adjudication API called out of order !');
-    }
 
     adjudicationItem.updateMedicalAdjudicationResult(medicalAdjudicationResult);
 

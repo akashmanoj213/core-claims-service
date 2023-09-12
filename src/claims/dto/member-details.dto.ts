@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDate,
   IsEmail,
   IsEnum,
@@ -44,6 +45,8 @@ export class MemberDetailsDto {
   memberWaitingPeriod: number;
   @IsInt()
   numberOfClaims: number;
+  @IsBoolean()
+  isInstantCashless: boolean;
   @IsDate()
   @Type(() => Date)
   startDate: Date;

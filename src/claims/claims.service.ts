@@ -23,6 +23,7 @@ import { VariationData } from './entities/variation-data-entity';
 import { plainToInstance } from 'class-transformer';
 import { ClaimItemType, PaymentStatus } from 'src/core/enums';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
+import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashless-fwa-completed.dto';
 
 @Injectable()
 export class ClaimsService {
@@ -148,6 +149,10 @@ export class ClaimsService {
       variations.push(variationData);
     }
 
+    let newClaimItem = new ClaimItem({
+      claimItemType: ClaimItemType.INTIAL,
+    });
+
     if (variations.length) {
       console.log('Variation detected !');
       claim.isVariationDetected = true;
@@ -155,15 +160,36 @@ export class ClaimsService {
       claim.variations = variations;
     } else {
       claim.claimStatus = ClaimStatus.INITIATED;
-    }
 
-    const newClaimItem = new ClaimItem({
-      claimItemType: ClaimItemType.INTIAL,
-    });
+      // Check if hospital and member are part of instant cashless claim request
+      if (this.checkIfInstantCashlessClaim(claim)) {
+        claim.isInstantCashless = true;
+        newClaimItem = new ClaimItem({
+          claimItemType: ClaimItemType.FINAL,
+        });
+      }
+    }
 
     claim.addNewClaimItem(newClaimItem);
 
     return claim;
+  }
+
+  checkIfInstantCashlessClaim(claim: Claim) {
+    const {
+      hospitalDetails,
+      memberDetails,
+      doctorTreatmentDetails: { ICD11Code },
+    } = claim;
+
+    // list of instant cashless treatmments
+    const instantCashlessTreatment = ['ICD-1000'];
+
+    return (
+      instantCashlessTreatment.includes(ICD11Code) &&
+      hospitalDetails.isInstantCashless &&
+      memberDetails.isInstantCashless
+    );
   }
 
   async createEnhancement(claimId: number, enhancementAmount: number) {
@@ -362,6 +388,58 @@ export class ClaimsService {
     console.log(`Claim item details updated.`);
 
     return claimItem;
+  }
+
+  async updateAllFWAResults(
+    instantCashlessFWACompletedEventDto: InstantCashlessFWACompletedEventDto,
+  ) {
+    const {
+      claimItemId,
+      claimId,
+      medicalFWAReason,
+      medicalFWAResult,
+      nonMedicalFWAReason,
+      nonMedicalFWAResult,
+    } = instantCashlessFWACompletedEventDto;
+
+    const claim = await this.claimRepository.findOne({
+      where: { id: claimId },
+      relations: { claimItems: true, hospitalDetails: true },
+    });
+
+    // only applicable to instant cashless claims
+    if (!claim.isInstantCashless) {
+      throw new Error(
+        'Direct approval is valid only for instant cashless claims !',
+      );
+    }
+
+    const claimItem = claim.claimItems.find(
+      (claimItem) => claimItem.id === claimItemId,
+    );
+
+    const { totalAmount } = claimItem;
+    const coPayableAmount = 0.0;
+
+    claimItem.updateNonMedicalFWAResults(
+      nonMedicalFWAResult,
+      nonMedicalFWAReason,
+    );
+
+    claimItem.updateMedicalFWAResults(medicalFWAResult, medicalFWAReason);
+
+    claimItem.approveClaimItem(
+      totalAmount,
+      coPayableAmount,
+      'Instant approval',
+    );
+    claim.approveClaim(totalAmount, coPayableAmount);
+
+    // save claim and claimItem
+    await this.claimRepository.save(claim);
+    console.log(`Claim and claim item details updated.`);
+
+    return claim;
   }
 
   async updateMedicalAdjResults(

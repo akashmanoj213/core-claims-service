@@ -30,6 +30,11 @@ export class HospitalDetails {
   bankAccountName: string;
   @Column()
   rohiniId: number;
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isInstantCashless = false;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
