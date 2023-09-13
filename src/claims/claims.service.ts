@@ -183,7 +183,7 @@ export class ClaimsService {
     } = claim;
 
     // list of instant cashless treatmments
-    const instantCashlessTreatment = ['ICD-1000'];
+    const instantCashlessTreatment = ['ICD-1000', 'R27'];
 
     return (
       instantCashlessTreatment.includes(ICD11Code) &&
