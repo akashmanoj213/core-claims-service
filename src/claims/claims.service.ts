@@ -564,6 +564,12 @@ export class ClaimsService {
         memberDetails: true,
         variations: true,
       },
+      order: {
+        id: 'DESC',
+        claimItems: {
+          id: 'DESC',
+        },
+      },
     });
   }
 
@@ -590,6 +596,11 @@ export class ClaimsService {
         hospitalDetails: true,
         memberDetails: true,
         variations: true,
+      },
+      order: {
+        claimItems: {
+          id: 'DESC',
+        },
       },
     });
   }

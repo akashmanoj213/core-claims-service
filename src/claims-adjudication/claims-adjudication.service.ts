@@ -231,6 +231,9 @@ export class ClaimsAdjudicationService {
           variations: true,
         },
       },
+      order: {
+        id: 'DESC',
+      },
     });
   }
 
