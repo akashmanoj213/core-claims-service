@@ -83,7 +83,7 @@ export class ClaimsAdjudicationService {
 
     if (!adjudicationItem) {
       throw new Error(
-        `Adjudication item not found for claim item ID: ${claimItemId}. Please complete file upload for the claim item`,
+        `Adjudication item not found for claim item ID: ${claimItemId}. Please complete file upload for the claim item.`,
       );
     }
 
@@ -150,6 +150,12 @@ export class ClaimsAdjudicationService {
     const adjudicationItem = await this.adjudicationItemRepository.findOneBy({
       claimItemId: claimItemId,
     });
+
+    if (!adjudicationItem) {
+      throw new Error(
+        `Adjudication item not found for claim item ID: ${claimItemId}. Please complete file upload for the claim item.`,
+      );
+    }
 
     adjudicationItem.updateMedicalAdjudicationResult(medicalAdjudicationResult);
 
