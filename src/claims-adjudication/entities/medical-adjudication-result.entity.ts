@@ -2,12 +2,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { AdjudicationType, VariationData } from './variation-data.entity';
 import { AdjudicationItem } from './adjudication-item.entity';
 
 export enum MedicalAdjudicationDecision {
@@ -52,19 +50,19 @@ export class MedicalAdjudicationResult {
     (AdjudicationItem) => AdjudicationItem.medicalAdjudicationResult,
   )
   adjudicationItem: AdjudicationItem;
-  @OneToMany(
-    () => VariationData,
-    (VariationData) => VariationData.adjudicationResult,
-    { cascade: true },
-  )
-  variations: VariationData[];
+  // @OneToMany(
+  //   () => VariationData,
+  //   (VariationData) => VariationData.adjudicationResult,
+  //   { cascade: true },
+  // )
+  // variations: VariationData[];
 
-  addVariationData(variationData: VariationData) {
-    variationData.adjudicationType = AdjudicationType.MEDICAL;
-    this.variations && this.variations.length
-      ? this.variations.push(variationData)
-      : (this.variations = [variationData]);
-  }
+  // addVariationData(variationData: VariationData) {
+  //   variationData.adjudicationType = AdjudicationType.MEDICAL;
+  //   this.variations && this.variations.length
+  //     ? this.variations.push(variationData)
+  //     : (this.variations = [variationData]);
+  // }
 
   constructor(init?: Partial<MedicalAdjudicationResult>) {
     Object.assign(this, init);

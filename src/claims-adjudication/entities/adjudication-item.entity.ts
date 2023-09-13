@@ -295,14 +295,30 @@ export class AdjudicationItem {
       );
     }
 
-    this.medicalAdjudicationResult = adjudicationResult;
-
-    const { decision, approvedPayableAmount, coPayableAmount } =
-      adjudicationResult;
+    const {
+      decision,
+      approvedPayableAmount = 0.0,
+      coPayableAmount = 0.0,
+    } = adjudicationResult;
 
     switch (decision) {
       case MedicalAdjudicationDecision.APPROVED:
         this.status = AdjudicationItemStatus.APPROVED;
+        if (approvedPayableAmount < 0.0 || coPayableAmount < 0.0) {
+          throw new Error(
+            'Approved payable and co payable amount have to be a non-negative value !',
+          );
+        }
+
+        if (
+          approvedPayableAmount + coPayableAmount >
+          this.claimItemTotalAmount
+        ) {
+          throw new Error(
+            'Please approve values within claim item total amount !',
+          );
+        }
+
         this.approvedPayableAmount = approvedPayableAmount;
         this.coPayableAmount = coPayableAmount;
         break;
@@ -313,6 +329,8 @@ export class AdjudicationItem {
       default:
         break;
     }
+
+    this.medicalAdjudicationResult = adjudicationResult;
   }
 
   constructor(init?: Partial<AdjudicationItem>) {

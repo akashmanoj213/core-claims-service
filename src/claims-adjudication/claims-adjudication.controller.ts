@@ -341,7 +341,7 @@ export class ClaimsAdjudicationController {
         coPayableAmount,
         decision,
         overallComment,
-        variations: variationsDto,
+        // variations: variationsDto,
       } = medicalAdjudicationResultDto;
 
       const medicalAdjudicationResult = new MedicalAdjudicationResult({
@@ -351,18 +351,18 @@ export class ClaimsAdjudicationController {
         overallComment,
       });
 
-      if (variationsDto && variationsDto.length) {
-        variationsDto.forEach((variationDto) => {
-          const { fieldName, comment } = variationDto;
+      // if (variationsDto && variationsDto.length) {
+      //   variationsDto.forEach((variationDto) => {
+      //     const { fieldName, comment } = variationDto;
 
-          const variationData = new VariationData({
-            comment,
-            fieldName,
-          });
+      //     const variationData = new VariationData({
+      //       comment,
+      //       fieldName,
+      //     });
 
-          medicalAdjudicationResult.addVariationData(variationData);
-        });
-      }
+      //     medicalAdjudicationResult.addVariationData(variationData);
+      //   });
+      // }
 
       const adjudicationItem =
         await this.claimsAdjudicationService.saveMedicalAdjResult(

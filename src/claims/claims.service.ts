@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Claim, ClaimStatus } from './entities/claim.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ClaimItem, ClaimItemStatus } from './entities/claim-item.entity';
+import { ClaimItem } from './entities/claim-item.entity';
 import { NonMedicalFWACompletedEventDto } from 'src/core/dto/non-medical-fwa-completed-event.dto';
 import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-completed-event.dto';
 import { FileUploadService } from 'src/core/providers/file-upload/file-upload.service';

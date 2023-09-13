@@ -203,9 +203,7 @@ export class ClaimsAdjudicationService {
         nonMedicalAdjudicationResult: {
           variations: true,
         },
-        medicalAdjudicationResult: {
-          variations: true,
-        },
+        medicalAdjudicationResult: true,
       },
     });
   }
@@ -227,9 +225,7 @@ export class ClaimsAdjudicationService {
         nonMedicalAdjudicationResult: {
           variations: true,
         },
-        medicalAdjudicationResult: {
-          variations: true,
-        },
+        medicalAdjudicationResult: true,
       },
       order: {
         id: 'DESC',
@@ -260,9 +256,10 @@ export class ClaimsAdjudicationService {
           nonMedicalAdjudicationResult: {
             variations: true,
           },
-          medicalAdjudicationResult: {
-            variations: true,
-          },
+          medicalAdjudicationResult: true,
+        },
+        order: {
+          id: 'DESC',
         },
       });
 
@@ -288,9 +285,10 @@ export class ClaimsAdjudicationService {
           nonMedicalAdjudicationResult: {
             variations: true,
           },
-          medicalAdjudicationResult: {
-            variations: true,
-          },
+          medicalAdjudicationResult: true,
+        },
+        order: {
+          id: 'DESC',
         },
       },
     );

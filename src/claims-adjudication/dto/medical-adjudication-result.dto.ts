@@ -1,12 +1,4 @@
-import { Type } from 'class-transformer';
-import {
-  IsEnum,
-  IsInt,
-  IsNumber,
-  IsString,
-  ValidateNested,
-} from 'class-validator';
-import { VariationDataDto } from './variation-data.dto';
+import { IsEnum, IsInt, IsNumber, IsString } from 'class-validator';
 import { MedicalAdjudicationDecision } from '../entities/medical-adjudication-result.entity';
 
 export class MedicalAdjudicationResultDto {
@@ -20,7 +12,7 @@ export class MedicalAdjudicationResultDto {
   overallComment: string;
   @IsEnum(MedicalAdjudicationDecision)
   decision: MedicalAdjudicationDecision;
-  @ValidateNested()
-  @Type(() => VariationDataDto)
-  variations: Array<VariationDataDto>;
+  // @ValidateNested()
+  // @Type(() => VariationDataDto)
+  // variations: Array<VariationDataDto>;
 }
