@@ -163,6 +163,7 @@ export class ClaimsService {
 
       // Check if hospital and member are part of instant cashless claim request
       if (this.checkIfInstantCashlessClaim(claim)) {
+        console.log('Instant cashless claim identified.');
         claim.isInstantCashless = true;
         newClaimItem = new ClaimItem({
           claimItemType: ClaimItemType.FINAL,

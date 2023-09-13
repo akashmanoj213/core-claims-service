@@ -490,8 +490,7 @@ export class ClaimsAdjudicationController {
       isInstantCashless,
     } = claimItemInitiatedEventDto;
 
-    let documents: AdjudicationItemDocument[],
-      patientAdmissionDetails: PatientAdmissionDetails,
+    let patientAdmissionDetails: PatientAdmissionDetails,
       doctorTreatmentDetails: DoctorTreatmentDetails,
       accidentDetails: AccidentDetails,
       maternityDetails: MaternityDetails,
@@ -512,7 +511,6 @@ export class ClaimsAdjudicationController {
       );
       patientAdmissionDetails =
         existingAdjudicationItem.patientAdmissionDetails;
-      documents = existingAdjudicationItem.documents;
       doctorTreatmentDetails = existingAdjudicationItem.doctorTreatmentDetails;
       accidentDetails = existingAdjudicationItem.accidentDetails;
       maternityDetails = existingAdjudicationItem.maternityDetails;
@@ -531,10 +529,6 @@ export class ClaimsAdjudicationController {
         ...patientAdmissionDetailsDto,
         pastHistoryOfChronicIllness,
       });
-      documents = documentsDto.map(
-        (adjudicationItemDocument) =>
-          new AdjudicationItemDocument(adjudicationItemDocument),
-      );
       doctorTreatmentDetails = new DoctorTreatmentDetails(
         doctorTreatmentDetailsDto,
       );
@@ -544,6 +538,11 @@ export class ClaimsAdjudicationController {
       memberDetails = new MemberDetails(eventMemberDetails);
       hospitalDetails = new HospitalDetails(eventHospitalDetails);
     }
+
+    const documents: AdjudicationItemDocument[] = documentsDto.map(
+      (adjudicationItemDocument) =>
+        new AdjudicationItemDocument(adjudicationItemDocument),
+    );
 
     const adjudicationItem = new AdjudicationItem({
       claimId,

@@ -188,6 +188,13 @@ export class ClaimsController {
       });
 
       const claimItem = await this.claimsService.findClaimItem(claimItemId);
+
+      if (!claimItem) {
+        throw new Error(
+          `No claim item found for claim item ID: ${claimItemId}`,
+        );
+      }
+
       const {
         claim: { claimStatus, contactNumber, id: claimId, isInstantCashless },
         claimItemType,
