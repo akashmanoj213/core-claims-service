@@ -176,6 +176,13 @@ export class ClaimsController {
     try {
       const fieldNames = [];
 
+      if (!files || files.length === 0) {
+        console.log('No file attached with request.');
+        throw new Error(
+          `There are no files attached. Please attach the required documents.`,
+        );
+      }
+
       files.forEach((file) => {
         fieldNames.push(file.fieldname);
       });
@@ -237,7 +244,9 @@ export class ClaimsController {
 
       return 'Documents uploaded successfully but data variations detected in claim values !';
     } catch (error) {
-      console.log('Error occured during fileUpload or publishing event !');
+      console.log(
+        `Error occured during fileUpload or publishing event ! ${error.message}`,
+      );
       throw new InternalServerErrorException(
         'Error occured during fileUpload or publishing event !',
         {
@@ -254,6 +263,7 @@ export class ClaimsController {
     @Body() createEnhancementDto: CreateEnhancementDto,
   ) {
     try {
+      console.log('-------------------  -------------------');
       console.log('addEnhancement API invoked.');
       const { enhancementAmount } = createEnhancementDto;
 
@@ -301,7 +311,8 @@ export class ClaimsController {
     @Body() createFinalSubmissionDto: CreateFinalSubmissionDto,
   ) {
     try {
-      console.log('AddFinalSubmission API invoked.');
+      console.log('-------------------  -------------------');
+      console.log('addFinalSubmission API invoked.');
       const { remainingAmount } = createFinalSubmissionDto;
 
       const claim = await this.claimsService.createFinalSubmission(
@@ -342,7 +353,7 @@ export class ClaimsController {
   @Post('non-medical-fwa-handler')
   async nonMedicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
-    console.log('Non medical FWA hanlder invoked.');
+    console.log('Non medical FWA completed hanlder invoked.');
     try {
       const nonMedicalFWACompletedEventDto =
         this.pubSubService.formatMessageData<NonMedicalFWACompletedEventDto>(

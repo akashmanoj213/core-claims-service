@@ -27,6 +27,8 @@ import { VariationData } from './variation-data-entity';
 
 export enum ClaimStatus {
   INITIATED = 'initiated',
+  ENHANCEMENT_INITIATED = 'enhancement initiated',
+  FINAL_SUBMISSION_INITIATED = 'final-submission initiated',
   VARIATIONS_DETECTED = 'variations detected',
   UNDER_REVIEW = 'under review',
   // REVIEW_COMPLETED = 'review completed',
@@ -253,6 +255,8 @@ export class Claim {
             "An 'enhancement' claim item must have a positive totalAmount !",
           );
         }
+
+        this.claimStatus = ClaimStatus.ENHANCEMENT_INITIATED;
       } else if (claimItem.claimItemType === ClaimItemType.INTIAL) {
         throw new Error("Claim item with type 'initial' already exists !");
       } else if (claimItem.claimItemType === ClaimItemType.FINAL) {
@@ -261,6 +265,7 @@ export class Claim {
         }
 
         this.isFinal = true;
+        this.claimStatus = ClaimStatus.FINAL_SUBMISSION_INITIATED;
       }
 
       this.claimItems.push(claimItem);

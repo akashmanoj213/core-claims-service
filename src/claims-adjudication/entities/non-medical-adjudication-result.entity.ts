@@ -1,9 +1,11 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { AdjudicationType, VariationData } from './variation-data.entity';
 import { AdjudicationItem } from './adjudication-item.entity';
@@ -14,6 +16,10 @@ export class NonMedicalAdjudicationResult {
   id?: number;
   @Column()
   overallComment: string;
+  @CreateDateColumn()
+  createdAt?: Date;
+  @UpdateDateColumn()
+  updatedAt?: Date;
 
   @OneToOne(
     () => AdjudicationItem,

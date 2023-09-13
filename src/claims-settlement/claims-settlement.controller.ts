@@ -51,7 +51,7 @@ export class ClaimsSettlementController {
       if (existingClaimSettlement) {
         const { paymentId } = existingClaimSettlement;
         console.log(
-          `Payment with ID: ${paymentId} already initiated for claim ID: ${claimId}`,
+          `Payment with ID: ${paymentId} already initiated for claim ID: ${claimId}.`,
         );
         return existingClaimSettlement;
       }

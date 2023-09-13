@@ -53,7 +53,7 @@ export class ClaimsSettlementService {
     claimSettlement.completePayment();
 
     const result = await this.claimSettlementRepository.save(claimSettlement);
-    console.log(`Payment conpleted and claim settlement data updated.`);
+    console.log(`Payment completed and claim settlement data updated.`);
 
     return result;
   }
