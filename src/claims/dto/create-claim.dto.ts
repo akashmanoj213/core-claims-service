@@ -2,8 +2,7 @@ import {
   IsEnum,
   IsInt,
   IsNotEmptyObject,
-  IsNumber,
-  IsString,
+  IsOptional,
   ValidateNested,
 } from 'class-validator';
 import { AccidentDetailsDto } from './accident-details.dto';
@@ -68,9 +67,11 @@ export class CreateClaimDto {
   @Type(() => HospitalDeclarationDto)
   @IsNotEmptyObject()
   hospitalDeclaration: HospitalDeclarationDto;
+  @IsOptional()
   @ValidateNested()
   @Type(() => MaternityDetailsDto)
   maternityDetails?: MaternityDetailsDto; // Check if insurance covers Maternity ?
+  @IsOptional()
   @ValidateNested()
   @Type(() => AccidentDetailsDto)
   accidentDetails?: AccidentDetailsDto;

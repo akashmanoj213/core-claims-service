@@ -85,9 +85,11 @@ export class ClaimsController {
       // need to convert the array inside from DTO to entity as well
       const { pastHistoryOfChronicIllness: pastHistoryOfChronicIllnessDto } =
         patientAdmissionDetailsDto;
-      const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto.map(
-        (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
-      );
+      const pastHistoryOfChronicIllness = pastHistoryOfChronicIllnessDto
+        ? pastHistoryOfChronicIllnessDto.map(
+            (pastChronicIllness) => new PastChronicIllness(pastChronicIllness),
+          )
+        : null;
 
       const patientAdmissionDetails = new PatientAdmissionDetails({
           ...patientAdmissionDetailsDto,
