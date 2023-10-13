@@ -121,6 +121,7 @@ export class ClaimsSettlementController {
       const { contactNumber, approvedPayableAmount, claimId } =
         claimRejectedEventDto;
 
+      // notify customer
       const message =
         approvedPayableAmount == 0
           ? `Unfortunately, your claim ID: ${claimId} has been rejected. Please make your payment at the hospital.`

@@ -1,6 +1,6 @@
 import { IsInt } from 'class-validator';
 
-export class PasClaimSyncDto {
+export class PasClaimSyncEventDto {
   @IsInt()
   claimId: number;
 

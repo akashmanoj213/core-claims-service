@@ -33,7 +33,7 @@ import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-
 import { PolicyDetails } from './entities/policy-details.entity';
 import { MemberDetails } from './entities/member-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
-import { PasClaimSyncDto } from 'src/claims/dto/pas-claim-sync.dto';
+import { PasClaimSyncEventDto } from 'src/claims/dto/pas-claim-sync.dto';
 import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashless-fwa-completed.dto';
 
 @Controller('claims-adjudication')
@@ -582,7 +582,7 @@ export class ClaimsAdjudicationController {
   async syncToPas(claimId: number) {
     console.log('Syncing to PAS claims adj topic.');
 
-    const pasClaimSyncDto = new PasClaimSyncDto(claimId);
+    const pasClaimSyncDto = new PasClaimSyncEventDto(claimId);
     await this.pubSubService.publishMessage(
       this.PAS_CLAIM_ADJ_SYNC_TOPIC,
       pasClaimSyncDto,

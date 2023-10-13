@@ -37,7 +37,7 @@ import { CreateEnhancementDto } from './dto/create-enhancement.dto';
 import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
 import { ClaimApprovedEventDto } from 'src/core/dto/claim-approved-event.dto';
 import { PaymentStatusChangedEventDto } from 'src/core/dto/payment-status-changed-event.dto';
-import { PasClaimSyncDto } from './dto/pas-claim-sync.dto';
+import { PasClaimSyncEventDto } from './dto/pas-claim-sync.dto';
 import { ClaimItemType } from 'src/core/enums';
 import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
 import { ClaimRejectedEventDto } from 'src/core/dto/claim-rejected-event.dto';
@@ -375,12 +375,13 @@ export class ClaimsController {
           nonMedicalFWACompletedEventDto,
         );
 
+      // notify customer
       await this.notificationService.sendSMS(
         contactNumber,
         `Your claim ID: ${claimId} is currently under review. You will recieve a message once it is completed.`,
       );
 
-      //Sync to PAS
+      // sync to PAS
       await this.syncToPas(claimId);
     } catch (error) {
       console.log(
@@ -804,10 +805,10 @@ export class ClaimsController {
   async syncToPas(claimId: number) {
     console.log('Syncing to PAS claims topic.');
 
-    const pasClaimSyncDto = new PasClaimSyncDto(claimId);
+    const pasClaimSyncEventDto = new PasClaimSyncEventDto(claimId);
     await this.pubSubService.publishMessage(
       this.PAS_CLAIM_SYNC_TOPIC,
-      pasClaimSyncDto,
+      pasClaimSyncEventDto,
     );
   }
 }
