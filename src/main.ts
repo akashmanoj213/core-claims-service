@@ -2,11 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as lb from '@google-cloud/logging-bunyan';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
-  const { mw } = await lb.express.middleware();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
 
   const config = new DocumentBuilder()
     .setTitle('Claims APIs')
@@ -24,7 +24,6 @@ async function bootstrap() {
   );
 
   app.enableCors();
-  app.use(mw);
 
   await app.listen(parseInt(process.env.PORT) || 8080);
 }

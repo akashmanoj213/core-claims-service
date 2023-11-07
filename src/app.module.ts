@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClaimsModule } from './claims/claims.module';
@@ -7,10 +7,12 @@ import { ClaimsAdjudicationModule } from './claims-adjudication/claims-adjudicat
 import { CamundaClientService } from './core/providers/camunda-client/camunda-client.service';
 import { ConfigModule } from '@nestjs/config';
 import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    LoggerModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,

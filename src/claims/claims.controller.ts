@@ -8,6 +8,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { ClaimsService } from './claims.service';
 import { CreateClaimDto } from './dto/create-claim.dto';
@@ -31,7 +32,7 @@ import { NonMedicalAdjEventCompletedDto } from 'src/core/dto/non-medical-adj-com
 import { ClaimItemInitiatedEventDto } from 'src/core/dto/claim-item-initiated-event.dto';
 import { MedicalAdjCompletedEventDto } from 'src/core/dto/medical-adj-completed-event.dto';
 import { MedicalFWACompletedEventDto } from 'src/core/dto/medical-fwa-completed-event.dto';
-import { ClaimItem, ClaimItemStatus } from './entities/claim-item.entity';
+import { ClaimItem } from './entities/claim-item.entity';
 import { NotificationService } from 'src/core/providers/notification/notification.service';
 import { CreateEnhancementDto } from './dto/create-enhancement.dto';
 import { CreateFinalSubmissionDto } from './dto/create-final-submission.dto';
@@ -51,6 +52,7 @@ export class ClaimsController {
   private readonly PAS_CLAIM_SYNC_TOPIC = 'pas-claim-sync';
   private readonly INSTANT_CASHLESS_CLAIM_INITIATED_TOPIC =
     'instant-cashless-claim-initiated';
+  private readonly logger = new Logger(ClaimsController.name);
 
   constructor(
     private readonly claimsService: ClaimsService,
@@ -619,6 +621,7 @@ export class ClaimsController {
 
   @Get()
   findAll() {
+    this.logger.log('Fetching all claims...');
     return this.claimsService.findAll();
   }
 
