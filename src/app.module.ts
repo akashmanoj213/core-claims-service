@@ -12,7 +12,13 @@ import { LoggerModule } from 'nestjs-pino';
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    LoggerModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        customAttributeKeys: {
+          responseTime: 'latency',
+        },
+      },
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
