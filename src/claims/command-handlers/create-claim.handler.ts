@@ -6,6 +6,7 @@ import { EventStore, OperationTypes } from '../entities/event-store.entity';
 import { PubSubService } from 'src/core/providers/pub-sub/pub-sub.service';
 import { EventStoreEventDto, EventTypes } from '../dto/event-store-event.dto';
 import * as crypto from 'crypto';
+import { Logger } from '@nestjs/common';
 
 @CommandHandler(CreateClaimCommand)
 export class CreateClaimCommandHandler
