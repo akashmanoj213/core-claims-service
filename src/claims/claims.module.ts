@@ -24,6 +24,11 @@ import { PolicyDetails } from './entities/policy-details.entity';
 import { HospitalDetails } from './entities/hospital-details.entity';
 import { MemberDetails } from './entities/member-details.entity';
 import { NotificationModule } from 'src/core/providers/notification/notification.module';
+import { EventStore } from './entities/event-store.entity';
+import { CqrsModule } from '@nestjs/cqrs';
+import { CreateClaimCommandHandler } from './command-handlers/create-claim.handler';
+
+export const CommandHandlers = [CreateClaimCommandHandler];
 
 @Module({
   imports: [
@@ -46,13 +51,15 @@ import { NotificationModule } from 'src/core/providers/notification/notification
       PolicyDetails,
       HospitalDetails,
       MemberDetails,
+      EventStore,
     ]),
     PubSubModule,
     FileUploadModule,
     HttpModule,
     NotificationModule,
+    CqrsModule,
   ],
   controllers: [ClaimsController],
-  providers: [ClaimsService],
+  providers: [ClaimsService, ...CommandHandlers],
 })
 export class ClaimsModule {}

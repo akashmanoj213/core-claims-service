@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Claim, ClaimStatus } from './entities/claim.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,6 +27,8 @@ import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashle
 
 @Injectable()
 export class ClaimsService {
+  private readonly logger = new Logger(ClaimsService.name);
+
   constructor(
     @InjectRepository(Claim)
     private claimRepository: Repository<Claim>,
@@ -639,10 +641,15 @@ export class ClaimsService {
     return result;
   }
 
-  async saveClaim(claim: Claim) {
+  async updateClaim(claim: Claim) {
     const result = await this.claimRepository.save(claim);
+    this.logger.log(`Claim updated! claimId: ${result.id}.`);
+    return result;
+  }
 
-    console.log(`Claim saved! claimId: ${result.id}.`);
+  async createClaim(claim: Claim) {
+    const result = await this.claimRepository.save(claim);
+    this.logger.log(`Claim created! claimId: ${result.id}.`);
     return result;
   }
 

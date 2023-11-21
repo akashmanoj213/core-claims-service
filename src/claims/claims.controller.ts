@@ -43,6 +43,8 @@ import { ClaimItemType } from 'src/core/enums';
 import { AdjudicationItemStatus } from 'src/claims-adjudication/entities/adjudication-item.entity';
 import { ClaimRejectedEventDto } from 'src/core/dto/claim-rejected-event.dto';
 import { InstantCashlessFWACompletedEventDto } from 'src/core/dto/instant-cashless-fwa-completed.dto';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateClaimCommand } from './commands/create-claim.command';
 
 @Controller('claims')
 export class ClaimsController {
@@ -58,13 +60,14 @@ export class ClaimsController {
     private readonly claimsService: ClaimsService,
     private pubSubService: PubSubService,
     private notificationService: NotificationService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   @Post()
   async create(@Body() createClaimDto: CreateClaimDto) {
     try {
-      console.log('-------------------  -------------------');
-      console.log('Create claim API invoked.');
+      this.logger.log('-------------------  -------------------');
+      this.logger.log('Create claim API invoked.');
 
       const {
         tpaId,
@@ -143,25 +146,27 @@ export class ClaimsController {
         claim,
       );
 
-      // save new claim
-      const savedClaim = await this.claimsService.saveClaim(initiatedClaim);
+      // Emit command to create new claim
+      await this.commandBus.execute(new CreateClaimCommand(claim));
+      this.logger.log('Command executed succesfully');
+      // const savedClaim = await this.claimsService.createClaim(initiatedClaim);
 
       // notify customer
-      await this.notificationService.sendSMS(
-        contactNumber,
-        `A new claim with claim ID : ${
-          savedClaim.id
-        } has been initiated and will be ${
-          savedClaim.isInstantCashless ? 'approved' : 'reviewed'
-        } shortly...`,
-      );
+      // await this.notificationService.sendSMS(
+      //   contactNumber,
+      //   `A new claim with claim ID : ${
+      //     savedClaim.id
+      //   } has been initiated and will be ${
+      //     savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+      //   } shortly...`,
+      // );
 
       // sync to PAS
-      await this.syncToPas(savedClaim.id);
+      //await this.syncToPas(savedClaim.id);
 
-      return savedClaim;
+      return initiatedClaim;
     } catch (error) {
-      console.log(`Failed to create new claim ! Error: ${error.message}`);
+      this.logger.error(`Failed to create new claim ! Error: ${error.message}`);
       throw new InternalServerErrorException('Failed to create new claim !', {
         cause: error,
         description: error.message,
@@ -283,7 +288,7 @@ export class ClaimsController {
         enhancementAmount,
       );
 
-      const savedClaim = await this.claimsService.saveClaim(claim);
+      const savedClaim = await this.claimsService.updateClaim(claim);
 
       const { contactNumber, claimItems } = savedClaim;
 
@@ -331,7 +336,7 @@ export class ClaimsController {
         remainingAmount,
       );
 
-      const savedClaim = await this.claimsService.saveClaim(claim);
+      const savedClaim = await this.claimsService.updateClaim(claim);
       const { contactNumber, claimItems } = savedClaim;
       const finalClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
       console.log(
@@ -599,6 +604,12 @@ export class ClaimsController {
         },
       );
     }
+  }
+
+  @Post('create-claim-event-handler')
+  handleCreateClaimEvent(@Body() claim: Claim) {
+    this.logger.log('Handler to create claim invoked!');
+    return this.claimsService.createClaim(claim);
   }
 
   @Post('create-topic')

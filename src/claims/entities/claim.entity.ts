@@ -51,6 +51,8 @@ export class Claim {
   //   TPAId: number; // will be calculated based on the patient
   //   @Column()
   //   policyId: number;
+  @Column({ type: 'uuid', nullable: true })
+  streamId?: string;
   @Column()
   policyNumber: number;
   @Column()
