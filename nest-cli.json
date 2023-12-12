@@ -1,8 +1,59 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/core-claims-service/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/core-claims-service/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/core-claims-service",
+  "projects": {
+    "core-claims-service": {
+      "type": "application",
+      "root": "apps/core-claims-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/core-claims-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/core-claims-service/tsconfig.app.json"
+      }
+    },
+    "claims-adjudication": {
+      "type": "application",
+      "root": "apps/claims-adjudication",
+      "entryFile": "main",
+      "sourceRoot": "apps/claims-adjudication/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/claims-adjudication/tsconfig.app.json"
+      }
+    },
+    "common-dto": {
+      "type": "library",
+      "root": "libs/common-dto",
+      "entryFile": "index",
+      "sourceRoot": "libs/common-dto/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common-dto/tsconfig.lib.json"
+      }
+    },
+    "common-library": {
+      "type": "library",
+      "root": "libs/common-library",
+      "entryFile": "index",
+      "sourceRoot": "libs/common-library/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common-library/tsconfig.lib.json"
+      }
+    },
+    "claims-settlement": {
+      "type": "application",
+      "root": "apps/claims-settlement",
+      "entryFile": "main",
+      "sourceRoot": "apps/claims-settlement/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/claims-settlement/tsconfig.app.json"
+      }
+    }
   }
 }

@@ -16,6 +16,20 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/common-dto": [
+        "libs/common-dto/src"
+      ],
+      "@app/common-dto/*": [
+        "libs/common-dto/src/*"
+      ],
+      "@app/common-services": [
+        "libs/common-services/src"
+      ],
+      "@app/common-services/*": [
+        "libs/common-services/src/*"
+      ]
+    }
   }
 }
