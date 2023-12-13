@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AdjudicationItem } from './entities/adjudication-item.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  EntityManager,
-  EntityTarget,
-  ObjectLiteral,
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 import { NonMedicalAdjudicationResult } from './entities/non-medical-adjudication-result.entity';
 import { MedicalAdjudicationResult } from './entities/medical-adjudication-result.entity';
 import { CamundaClientService } from '@app/common-services';
@@ -24,7 +19,6 @@ export class ClaimsAdjudicationService {
   constructor(
     @InjectRepository(AdjudicationItem, 'claims-adjudication')
     private adjudicationItemRepository: Repository<AdjudicationItem>,
-    private entityManger: EntityManager,
     private camundaClientService: CamundaClientService,
   ) {}
 
@@ -237,10 +231,6 @@ export class ClaimsAdjudicationService {
         id: 'DESC',
       },
     });
-  }
-
-  async findEntity(entity: EntityTarget<ObjectLiteral>, id: number) {
-    return await this.entityManger.findOneBy(entity, { id });
   }
 
   async getNonMedicalAdjudicationItems() {
