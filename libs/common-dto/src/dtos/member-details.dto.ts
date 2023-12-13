@@ -1,4 +1,7 @@
+import { Type } from 'class-transformer';
 import {
+  IsBoolean,
+  IsDate,
   IsEmail,
   IsEnum,
   IsInt,
@@ -16,7 +19,7 @@ enum Gender {
 
 export class MemberDetailsDto {
   @IsInt()
-  id: number;
+  id?: number;
   @IsNumber()
   sumInsured: number;
   @IsMobilePhone('en-IN')
@@ -42,4 +45,12 @@ export class MemberDetailsDto {
   memberWaitingPeriod: number;
   @IsInt()
   numberOfClaims: number;
+  @IsBoolean()
+  isInstantCashless: boolean;
+  @IsDate()
+  @Type(() => Date)
+  startDate: Date;
+  @IsDate()
+  @Type(() => Date)
+  endDate: Date;
 }

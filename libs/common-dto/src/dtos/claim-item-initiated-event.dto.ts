@@ -8,13 +8,13 @@ import {
 } from 'class-validator';
 import { ClaimItemType, ClaimType } from '../enums';
 import { Type } from 'class-transformer';
-import { AccidentDetailsDto } from 'apps/core-claims-service/src/claims/dto/accident-details.dto';
-import { DoctorTreatmentDetailsDto } from 'apps/core-claims-service/src/claims/dto/doctor-treatment-details.dto';
-import { MaternityDetailsDto } from 'apps/core-claims-service/src/claims/dto/maternity-details.dto';
-import { PatientAdmissionDetailsDto } from 'apps/core-claims-service/src/claims/dto/patient-admission-details.dto';
-import { PolicyDetails } from 'apps/core-claims-service/src/claims/entities/policy-details.entity';
-import { MemberDetails } from 'apps/core-claims-service/src/claims/entities/member-details.entity';
-import { HospitalDetails } from 'apps/core-claims-service/src/claims/entities/hospital-details.entity';
+import { DoctorTreatmentDetailsDto } from './doctor-treatment-details.dto';
+import { PatientAdmissionDetailsDto } from './patient-admission-details.dto';
+import { AccidentDetailsDto } from './accident-details.dto';
+import { MaternityDetailsDto } from './maternity-details.dto';
+import { PolicyDetailsDto } from './policy-details.dto';
+import { MemberDetailsDto } from './member-details.dto';
+import { HospitalDetailsDto } from './hospital-details.dto';
 
 // export enum ClaimItemStatus {
 //   INITIATED = 'initiated',
@@ -91,14 +91,14 @@ export class ClaimItemInitiatedEventDto {
   // @IsOptional()
   maternityDetails?: MaternityDetailsDto;
   @ValidateNested()
-  @Type(() => PolicyDetails)
-  policyDetails: PolicyDetails;
+  @Type(() => PolicyDetailsDto)
+  policyDetails: PolicyDetailsDto;
   @ValidateNested()
-  @Type(() => MemberDetails)
-  memberDetails: MemberDetails;
+  @Type(() => MemberDetailsDto)
+  memberDetails: MemberDetailsDto;
   @ValidateNested()
-  @Type(() => HospitalDetails)
-  hospitalDetails: HospitalDetails;
+  @Type(() => HospitalDetailsDto)
+  hospitalDetails: HospitalDetailsDto;
 
   constructor(init?: ClaimItemInitiatedEventDto) {
     Object.assign(this, init);

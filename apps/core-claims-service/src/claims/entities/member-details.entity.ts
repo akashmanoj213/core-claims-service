@@ -68,6 +68,10 @@ export class MemberDetails {
     default: false,
   })
   isInstantCashless = false;
+  @Column()
+  startDate: Date;
+  @Column()
+  endDate: Date;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()
