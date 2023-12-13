@@ -1,5 +1,4 @@
-import { ClaimStatus } from '@app/common-dto';
-import { ClaimType, PaymentStatus } from '@app/common-dto';
+import { ClaimStatus, ClaimType, PaymentStatus } from '@app/common-dto';
 
 import {
   Entity,
