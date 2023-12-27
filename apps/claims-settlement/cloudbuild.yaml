@@ -1,0 +1,18 @@
+steps:
+# Docker-compose build the image. Docker-compose file specifies root context to be able to copy common package.json file.
+  - name: docker
+    args: ['compose', '-f', 'apps/claims-settlement/docker-compose.yml', 'build']
+# Tag the image with a unique name
+  - name: 'docker'
+    args: ['tag',
+      'claims-settlement',
+      '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA']
+# Push the container image to Container Registry (Make sure sahi folder is created)
+  - name: 'docker'
+    args: ['push', '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA']
+# Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: ['run', 'deploy', 'sahi-claims-settlement', '--image', '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA', '--region', '$LOCATION', '--allow-unauthenticated']
+images:
+  - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA'

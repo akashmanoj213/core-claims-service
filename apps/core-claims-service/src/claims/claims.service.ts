@@ -156,7 +156,7 @@ export class ClaimsService {
     }
 
     let newClaimItem = new ClaimItem({
-      // claimItemType: ClaimItemType.INTIAL,
+      claimItemType: ClaimItemType.INTIAL,
     });
 
     if (variations.length) {

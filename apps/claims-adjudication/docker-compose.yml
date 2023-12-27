@@ -1,0 +1,6 @@
+services:
+  claims-adjudication:
+    build:
+      context: ../../
+      dockerfile: ./apps/claims-adjudication/Dockerfile
+    image: 'claims-adjudication'

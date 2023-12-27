@@ -1,0 +1,6 @@
+services:
+  core-claims-service:
+    build:
+      context: ../../
+      dockerfile: ./apps/core-claims-service/Dockerfile
+    image: 'core-claims-service'

@@ -11,6 +11,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch | pino-pretty",
+    "start:debug:claims-adjudication": "nest start --debug --watch claims-adjudication | pino-pretty",
+    "start:debug:claims-settlement": "nest start --debug --watch claims-settlement | pino-pretty",
     "start:prod": "node dist/apps/core-claims-service/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",

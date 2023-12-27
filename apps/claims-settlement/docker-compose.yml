@@ -1,0 +1,6 @@
+services:
+  claims-settlement:
+    build:
+      context: ../../
+      dockerfile: ./apps/claims-settlement/Dockerfile
+    image: 'claims-settlement'

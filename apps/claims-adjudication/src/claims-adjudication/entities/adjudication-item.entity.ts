@@ -313,6 +313,10 @@ export class AdjudicationItem {
 
         this.approvedPayableAmount = approvedPayableAmount;
         this.coPayableAmount = coPayableAmount;
+        this.totalApprovedPayableAmount =
+          +this.totalApprovedPayableAmount + approvedPayableAmount;
+        this.totalCoPayableAmount =
+          +this.totalCoPayableAmount + coPayableAmount;
         break;
       case MedicalAdjudicationDecision.REJECTED:
         this.status = AdjudicationItemStatus.REJECTED;

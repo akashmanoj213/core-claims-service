@@ -7,8 +7,12 @@ import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.mo
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    LoggerModule.forRoot(),
+    ConfigModule.forRoot({ envFilePath: 'apps/claims-settlement/.env' }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: false,
+      },
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
