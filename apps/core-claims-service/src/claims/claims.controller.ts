@@ -47,6 +47,8 @@ import {
   InstantCashlessFWACompletedEventDto,
   ClaimStatus,
 } from '@app/common-dto';
+import { MedicalBillDetails } from './entities/medical-bill-details.entity';
+import { MedicalBillLineItem } from './entities/medical-bill-line-item.entity';
 
 @Controller('claims')
 export class ClaimsController {
@@ -180,6 +182,7 @@ export class ClaimsController {
   @UseInterceptors(AnyFilesInterceptor())
   async fileUpload(
     @Param('claimItemId') claimItemId: number,
+    @Body() test: object,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ) {
     console.log('-------------------  -------------------');
@@ -331,12 +334,57 @@ export class ClaimsController {
     try {
       console.log('-------------------  -------------------');
       console.log('addFinalSubmission API invoked.');
-      const { remainingAmount } = createFinalSubmissionDto;
+      const { remainingAmount, medicalBillDetails } = createFinalSubmissionDto;
 
       const claim = await this.claimsService.createFinalSubmission(
         claimId,
         remainingAmount,
       );
+
+      //if detailed medical bills are present, save to claim
+      if (medicalBillDetails && medicalBillDetails.length) {
+        medicalBillDetails.forEach((medicalBillDto) => {
+          const {
+            billNumber,
+            billDate,
+            totalAmount,
+            lineItems: lineItemsDto,
+          } = medicalBillDto;
+
+          const lineItems: MedicalBillLineItem[] = [];
+
+          lineItemsDto.forEach((lineItemDto) => {
+            const {
+              icd10Level1,
+              icd10Level2,
+              icd10Level3,
+              amount,
+              rate,
+              unit,
+            } = lineItemDto;
+
+            const lineItem = new MedicalBillLineItem({
+              rate,
+              unit,
+              amount,
+              icd10Level1,
+              icd10Level2,
+              icd10Level3,
+            });
+
+            lineItems.push(lineItem);
+          });
+
+          const medicalBill = new MedicalBillDetails({
+            billDate,
+            billNumber,
+            totalAmount,
+            lineItems,
+          });
+
+          claim.addMedicalBill(medicalBill);
+        });
+      }
 
       const savedClaim = await this.claimsService.updateClaim(claim);
       const { contactNumber, claimItems } = savedClaim;

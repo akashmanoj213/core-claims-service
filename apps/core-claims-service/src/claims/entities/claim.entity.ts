@@ -24,6 +24,7 @@ import { PolicyDetails } from './policy-details.entity';
 import { MemberDetails } from './member-details.entity';
 import { HospitalDetails } from './hospital-details.entity';
 import { VariationData } from './variation-data-entity';
+import { MedicalBillDetails } from './medical-bill-details.entity';
 
 @Entity()
 export class Claim {
@@ -206,7 +207,13 @@ export class Claim {
   @OneToMany(() => VariationData, (variation) => variation.claim, {
     cascade: true,
   })
-  variations: VariationData[];
+  variations?: VariationData[];
+  @OneToMany(
+    () => MedicalBillDetails,
+    (medicalBill) => medicalBill.claimDetails,
+    { cascade: true },
+  )
+  medicalBills?: MedicalBillDetails[];
 
   constructor(init?: Partial<Claim>) {
     Object.assign(this, init);
@@ -293,6 +300,14 @@ export class Claim {
     this.totalClaimAmount =
       parseFloat(this.totalClaimAmount.toString()) +
       parseFloat(claimItem.totalAmount.toString());
+  }
+
+  addMedicalBill(medicalBill: MedicalBillDetails) {
+    if (this.medicalBills && this.medicalBills.length) {
+      this.medicalBills.push(medicalBill);
+    } else {
+      this.medicalBills = [medicalBill];
+    }
   }
 
   approveClaim(approvedPayableAmount, coPayableAmount) {

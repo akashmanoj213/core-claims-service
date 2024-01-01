@@ -25,6 +25,11 @@ import { EventStore } from './entities/event-store.entity';
 import { CqrsModule } from '@nestjs/cqrs';
 import { CreateClaimCommandHandler } from './command-handlers/create-claim.handler';
 import { CommonServicesModule } from '@app/common-services';
+import { ICD10Level1 } from './entities/icd-10-level1.entity';
+import { ICD10Level2 } from './entities/icd-10-level2.entity';
+import { ICD10Level3 } from './entities/icd-10-level3.entity';
+import { MedicalBillDetails } from './entities/medical-bill-details.entity';
+import { MedicalBillLineItem } from './entities/medical-bill-line-item.entity';
 
 export const CommandHandlers = [CreateClaimCommandHandler];
 
@@ -50,6 +55,11 @@ export const CommandHandlers = [CreateClaimCommandHandler];
       HospitalDetails,
       MemberDetails,
       EventStore,
+      ICD10Level1,
+      ICD10Level2,
+      ICD10Level3,
+      MedicalBillDetails,
+      MedicalBillLineItem,
     ]),
     HttpModule,
     CqrsModule,
