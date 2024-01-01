@@ -19,7 +19,8 @@ steps:
             '--set-env-vars', 'INSTANCE_CONNECTION_NAME=pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
             '--set-env-vars', 'DB_NAME=Claims',
             '--set-env-vars', 'DB_USER=sahi-user',
-            '--set-env-vars', 'DB_PASS=qwerty']
+            '--set-env-vars', 'DB_PASS=qwerty',
+            '--set-env-vars', 'PORT=8080']
 
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/core-claims-service:$COMMIT_SHA'
