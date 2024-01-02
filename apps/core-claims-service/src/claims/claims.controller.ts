@@ -416,6 +416,24 @@ export class ClaimsController {
     }
   }
 
+  @Get('icd-10-code/level3')
+  async getIcd10Level3Codes() {
+    try {
+      return this.claimsService.getICD10Level3Codes();
+    } catch (error) {
+      console.log(
+        `Error occured while retrieving ICD-10 Level 3 codes ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while retrieving ICD-10 Level 3 codes !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
   @Post('non-medical-fwa-handler')
   async nonMedicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');

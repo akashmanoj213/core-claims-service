@@ -28,6 +28,7 @@ import {
   ClaimStatus,
 } from '@app/common-dto';
 import { FileUploadService } from '@app/common-services';
+import { ICD10Level3 } from './entities/icd-10-level3.entity';
 
 @Injectable()
 export class ClaimsService {
@@ -38,6 +39,8 @@ export class ClaimsService {
     private claimRepository: Repository<Claim>,
     @InjectRepository(ClaimItem)
     private claimItemRepository: Repository<ClaimItem>,
+    @InjectRepository(ICD10Level3)
+    private icd10Level3Repository: Repository<ICD10Level3>,
     private fileUploadService: FileUploadService,
     private httpService: HttpService,
   ) {}
@@ -241,6 +244,16 @@ export class ClaimsService {
     claim.addNewClaimItem(newClaimItem);
 
     return claim;
+  }
+
+  async getICD10Level3Codes() {
+    return this.icd10Level3Repository.find({
+      relations: {
+        level2Item: {
+          level1Item: true,
+        },
+      },
+    });
   }
 
   getPolicyDetails(policyId) {
