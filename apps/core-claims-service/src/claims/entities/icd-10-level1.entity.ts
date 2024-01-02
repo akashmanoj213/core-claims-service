@@ -8,7 +8,7 @@ export class ICD10Level1 {
   @Column({
     unique: true,
   })
-  code: number;
+  code: string;
   @Column()
   name: string;
   @OneToMany(() => ICD10Level2, (icd10Level2) => icd10Level2.level1Item, {

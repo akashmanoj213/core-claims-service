@@ -8,8 +8,8 @@ import {
 } from 'class-validator';
 
 export class ICD10LineItemDto {
-  @IsInt()
-  code: number;
+  @IsString()
+  code: string;
   @IsString()
   name: string;
 }

@@ -16,7 +16,7 @@ export class ICD10Level2 {
   @Column({
     unique: true,
   })
-  code: number;
+  code: string;
   @Column()
   name: string;
   @ManyToOne(() => ICD10Level1, (level1Item) => level1Item.level2Items)
