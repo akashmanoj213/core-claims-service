@@ -4,5 +4,3 @@ services:
       context: ../../
       dockerfile: ./apps/core-claims-service/Dockerfile
     image: 'core-claims-service'
-    ports:
-      - "8080:8080"
