@@ -9,7 +9,10 @@ import {
   NonMedicalFWAOutcomeDto,
   MedicalFWAOutcomeDto,
   AdjudicationItemStatus,
+  ClaimItemType,
 } from '@app/common-dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ClaimsAdjudicationService {
@@ -20,6 +23,7 @@ export class ClaimsAdjudicationService {
     @InjectRepository(AdjudicationItem, 'claims-adjudication')
     private adjudicationItemRepository: Repository<AdjudicationItem>,
     private camundaClientService: CamundaClientService,
+    private httpService: HttpService,
   ) {}
 
   async performNonMedicalFWA(adjudicationItem: AdjudicationItem) {
@@ -167,7 +171,7 @@ export class ClaimsAdjudicationService {
   }
 
   async findAdjudicationItem(id: number) {
-    return await this.adjudicationItemRepository.findOne({
+    const adjudicationItem = await this.adjudicationItemRepository.findOne({
       where: {
         id,
       },
@@ -180,10 +184,32 @@ export class ClaimsAdjudicationService {
         policyDetails: true,
         memberDetails: true,
         hospitalDetails: true,
-        nonMedicalAdjudicationResult: true,
+        nonMedicalAdjudicationResult: {
+          variations: true,
+        },
         medicalAdjudicationResult: true,
       },
     });
+
+    if (adjudicationItem.claimItemType === ClaimItemType.FINAL) {
+      const { claimId } = adjudicationItem;
+
+      const httpResponse = await firstValueFrom(
+        this.httpService.get(
+          `${process.env.CORE_CLAIM_SERVICE_BASE_URL}/claims/${claimId}/medical-bill-details`,
+        ),
+      );
+
+      const medicalBillDetails: [] = httpResponse.data;
+
+      if (medicalBillDetails && medicalBillDetails.length)
+        return {
+          ...adjudicationItem,
+          medicalBillDetails,
+        };
+    }
+
+    return adjudicationItem;
   }
 
   async findAdjudicationItemByClaimItemId(claimItemId: number) {

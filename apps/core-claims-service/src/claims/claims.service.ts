@@ -29,6 +29,7 @@ import {
 } from '@app/common-dto';
 import { FileUploadService } from '@app/common-services';
 import { ICD10Level3 } from './entities/icd-10-level3.entity';
+import { MedicalBillDetails } from './entities/medical-bill-details.entity';
 
 @Injectable()
 export class ClaimsService {
@@ -41,6 +42,8 @@ export class ClaimsService {
     private claimItemRepository: Repository<ClaimItem>,
     @InjectRepository(ICD10Level3)
     private icd10Level3Repository: Repository<ICD10Level3>,
+    @InjectRepository(MedicalBillDetails)
+    private medicalBillDetailsRepository: Repository<MedicalBillDetails>,
     private fileUploadService: FileUploadService,
     private httpService: HttpService,
   ) {}
@@ -251,6 +254,23 @@ export class ClaimsService {
       relations: {
         level2Item: {
           level1Item: true,
+        },
+      },
+    });
+  }
+
+  async getMedicalBillDetails(claimId) {
+    return this.medicalBillDetailsRepository.find({
+      where: {
+        claimDetails: {
+          id: claimId,
+        },
+      },
+      relations: {
+        lineItems: {
+          icd10Level1: true,
+          icd10Level2: true,
+          icd10Level3: true,
         },
       },
     });
@@ -583,6 +603,13 @@ export class ClaimsService {
         hospitalDetails: true,
         memberDetails: true,
         variations: true,
+        medicalBills: {
+          lineItems: {
+            icd10Level1: true,
+            icd10Level2: true,
+            icd10Level3: true,
+          },
+        },
       },
       order: {
         id: 'DESC',
@@ -616,6 +643,13 @@ export class ClaimsService {
         hospitalDetails: true,
         memberDetails: true,
         variations: true,
+        medicalBills: {
+          lineItems: {
+            icd10Level1: true,
+            icd10Level2: true,
+            icd10Level3: true,
+          },
+        },
       },
       order: {
         claimItems: {
@@ -646,6 +680,13 @@ export class ClaimsService {
           hospitalDetails: true,
           memberDetails: true,
           variations: true,
+          medicalBills: {
+            lineItems: {
+              icd10Level1: true,
+              icd10Level2: true,
+              icd10Level3: true,
+            },
+          },
         },
         documents: true,
       },

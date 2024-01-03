@@ -37,6 +37,7 @@ import { CommonServicesModule } from '@app/common-services';
         MedicalAdjudicationResult,
         VariationData,
         AdjudicationItemDocument,
+        HttpModule,
       ],
       'claims-adjudication',
     ),

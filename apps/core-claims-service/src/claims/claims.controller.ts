@@ -434,6 +434,24 @@ export class ClaimsController {
     }
   }
 
+  @Get('/:claimId/medical-bill-details')
+  async getMedicalBillDetails(@Param('claimId') claimId: number) {
+    try {
+      return this.claimsService.getMedicalBillDetails(claimId);
+    } catch (error) {
+      console.log(
+        `Error occured while retrieving medical bill details ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while retrieving medical bill details !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
   @Post('non-medical-fwa-handler')
   async nonMedicalFWACompletedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
