@@ -727,6 +727,11 @@ export class ClaimsController {
     return this.claimsService.findClaim(id);
   }
 
+  @Get('stream/:streamId')
+  findOneByStreamId(@Param('streamId') streamId: string) {
+    return this.claimsService.findClaimBySreamId(streamId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.claimsService.remove(id);

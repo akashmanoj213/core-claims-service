@@ -659,6 +659,45 @@ export class ClaimsService {
     });
   }
 
+  findClaimBySreamId(streamId: string) {
+    return this.claimRepository.findOne({
+      where: {
+        streamId,
+      },
+      relations: {
+        claimItems: { documents: true },
+        tpaPolicyDetails: true,
+        tpaMemberDetails: true,
+        tpaHospitalDetails: true,
+        doctorTreatmentDetails: true,
+        patientAdmissionDetails: {
+          pastHistoryOfChronicIllness: true,
+        },
+        patientDeclaration: true,
+        doctorDeclaration: true,
+        hospitalDeclaration: true,
+        maternityDetails: true,
+        accidentDetails: true,
+        policyDetails: true,
+        hospitalDetails: true,
+        memberDetails: true,
+        variations: true,
+        medicalBills: {
+          lineItems: {
+            icd10Level1: true,
+            icd10Level2: true,
+            icd10Level3: true,
+          },
+        },
+      },
+      order: {
+        claimItems: {
+          id: 'DESC',
+        },
+      },
+    });
+  }
+
   findClaimItem(id: number) {
     const result = this.claimItemRepository.findOne({
       where: {
