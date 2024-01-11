@@ -4,7 +4,6 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  OneToOne,
 } from 'typeorm';
 import { MedicalBillDetails } from './medical-bill-details.entity';
 import { ICD10Level3 } from './icd-10-level3.entity';
@@ -17,13 +16,13 @@ export class MedicalBillLineItem {
   id?: number;
   @ManyToOne(() => MedicalBillDetails, (medicalBill) => medicalBill.lineItems)
   medicalBill: MedicalBillDetails;
-  @OneToOne(() => ICD10Level3)
+  @ManyToOne(() => ICD10Level3)
   @JoinColumn({ referencedColumnName: 'code', name: 'icd10Level3Code' })
   icd10Level3: ICD10Level3;
-  @OneToOne(() => ICD10Level2)
+  @ManyToOne(() => ICD10Level2)
   @JoinColumn({ referencedColumnName: 'code', name: 'icd10Level2Code' })
   icd10Level2: ICD10Level2;
-  @OneToOne(() => ICD10Level1)
+  @ManyToOne(() => ICD10Level1)
   @JoinColumn({ referencedColumnName: 'code', name: 'icd10Level1Code' })
   icd10Level1: ICD10Level1;
   @Column({
