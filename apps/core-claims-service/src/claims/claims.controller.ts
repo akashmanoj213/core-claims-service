@@ -434,6 +434,42 @@ export class ClaimsController {
     }
   }
 
+  @Get('icd-10-code/level2')
+  async getIcd10Level2Codes() {
+    try {
+      return this.claimsService.getICD10Level2Codes();
+    } catch (error) {
+      console.log(
+        `Error occured while retrieving ICD-10 Level 2 codes ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while retrieving ICD-10 Level 2 codes !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Get('icd-10-code/level1')
+  async getIcd10Level1Codes() {
+    try {
+      return this.claimsService.getICD10Level1Codes();
+    } catch (error) {
+      console.log(
+        `Error occured while retrieving ICD-10 Level 1 codes ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Error occured while retrieving ICD-10 Level 1 codes !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
   @Get('/:claimId/medical-bill-details')
   async getMedicalBillDetails(@Param('claimId') claimId: number) {
     try {

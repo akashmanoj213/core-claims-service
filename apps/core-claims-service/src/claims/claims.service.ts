@@ -30,6 +30,8 @@ import {
 import { FileUploadService } from '@app/common-services';
 import { ICD10Level3 } from './entities/icd-10-level3.entity';
 import { MedicalBillDetails } from './entities/medical-bill-details.entity';
+import { ICD10Level2 } from './entities/icd-10-level2.entity';
+import { ICD10Level1 } from './entities/icd-10-level1.entity';
 
 @Injectable()
 export class ClaimsService {
@@ -42,6 +44,10 @@ export class ClaimsService {
     private claimItemRepository: Repository<ClaimItem>,
     @InjectRepository(ICD10Level3)
     private icd10Level3Repository: Repository<ICD10Level3>,
+    @InjectRepository(ICD10Level2)
+    private icd10Level2Repository: Repository<ICD10Level2>,
+    @InjectRepository(ICD10Level1)
+    private icd10Level1Repository: Repository<ICD10Level1>,
     @InjectRepository(MedicalBillDetails)
     private medicalBillDetailsRepository: Repository<MedicalBillDetails>,
     private fileUploadService: FileUploadService,
@@ -255,6 +261,23 @@ export class ClaimsService {
         level2Item: {
           level1Item: true,
         },
+      },
+    });
+  }
+
+  async getICD10Level2Codes() {
+    return this.icd10Level2Repository.find({
+      relations: {
+        level1Item: true,
+        level3Items: true,
+      },
+    });
+  }
+
+  async getICD10Level1Codes() {
+    return this.icd10Level1Repository.find({
+      relations: {
+        level2Items: true,
       },
     });
   }
