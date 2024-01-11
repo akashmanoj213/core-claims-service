@@ -577,6 +577,19 @@ export class ClaimsService {
     return claim;
   }
 
+  async updateMedicalBillDetails(
+    claimId: number,
+    medicalBills: MedicalBillDetails[],
+  ) {
+    const claim = await this.claimRepository.findOneBy({ id: claimId });
+
+    medicalBills.forEach((medicalBill) => {
+      claim.addMedicalBill(medicalBill);
+    });
+
+    return await this.claimRepository.save(claim);
+  }
+
   async processDocumentUploads(files: Array<Express.Multer.File>) {
     console.log('Uploading documents.');
 

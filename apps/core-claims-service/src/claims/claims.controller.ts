@@ -49,6 +49,7 @@ import {
 } from '@app/common-dto';
 import { MedicalBillDetails } from './entities/medical-bill-details.entity';
 import { MedicalBillLineItem } from './entities/medical-bill-line-item.entity';
+import { UpdateFinalSubmissionDto } from './dto/update-final-submission.dto';
 
 @Controller('claims')
 export class ClaimsController {
@@ -333,16 +334,58 @@ export class ClaimsController {
   ) {
     try {
       console.log('-------------------  -------------------');
-      console.log('addFinalSubmission API invoked.');
-      const { remainingAmount, medicalBillDetails } = createFinalSubmissionDto;
+      console.log('final-submission API invoked.');
+      const { remainingAmount } = createFinalSubmissionDto;
 
       const claim = await this.claimsService.createFinalSubmission(
         claimId,
         remainingAmount,
       );
 
+      const savedClaim = await this.claimsService.updateClaim(claim);
+      const { contactNumber, claimItems } = savedClaim;
+      const finalClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
+      console.log(
+        `Final claim item created! claimItmeId : ${finalClaimItem.id}.`,
+      );
+
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `A final discharge request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+
+      //Sync to PAS
+      await this.syncToPas(claimId);
+
+      return finalClaimItem;
+    } catch (error) {
+      console.log(
+        `Failed to create final submission claim item ! Error: ${error.message}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to create final submission claim item !',
+        {
+          cause: error,
+          description: error.message,
+        },
+      );
+    }
+  }
+
+  @Post('/:claimId/medical-bill-details')
+  async updateMedicalBillDetails(
+    @Param('claimId') claimId: number,
+    @Body() updateFinalSubmissionDto: UpdateFinalSubmissionDto,
+  ) {
+    try {
+      console.log('-------------------  -------------------');
+      console.log('medical-bill-details API invoked.');
+      const { medicalBillDetails } = updateFinalSubmissionDto;
+
       //if detailed medical bills are present, save to claim
       if (medicalBillDetails && medicalBillDetails.length) {
+        const medicalBills: MedicalBillDetails[] = [];
+
         medicalBillDetails.forEach((medicalBillDto) => {
           const {
             billNumber,
@@ -382,32 +425,28 @@ export class ClaimsController {
             lineItems,
           });
 
-          claim.addMedicalBill(medicalBill);
+          medicalBills.push(medicalBill);
         });
+
+        const savedClaim = await this.claimsService.updateMedicalBillDetails(
+          claimId,
+          medicalBills,
+        );
+        console.log(`Claim id ${claimId} updated with medical bill details.`);
+
+        //Sync to PAS
+        await this.syncToPas(claimId);
+
+        return savedClaim;
+      } else {
+        throw new Error('No medical bill details attached!');
       }
-
-      const savedClaim = await this.claimsService.updateClaim(claim);
-      const { contactNumber, claimItems } = savedClaim;
-      const finalClaimItem = claimItems.sort((a, b) => b.id - a.id)[0];
-      console.log(
-        `Final claim item created! claimItmeId : ${finalClaimItem.id}.`,
-      );
-
-      await this.notificationService.sendSMS(
-        contactNumber,
-        `A final discharge request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
-      );
-
-      //Sync to PAS
-      await this.syncToPas(claimId);
-
-      return finalClaimItem;
     } catch (error) {
       console.log(
-        `Failed to create final submission claim item ! Error: ${error.message}`,
+        `Failed to update medical bill details ! Error: ${error.message}`,
       );
       throw new InternalServerErrorException(
-        'Failed to create final submission claim item !',
+        'Failed to update medical bill details !',
         {
           cause: error,
           description: error.message,
