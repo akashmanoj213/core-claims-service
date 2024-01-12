@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import * as FormData from 'form-data';
 import { FileUploadResponseDto } from '@app/common-dto';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable()
 export class FileUploadService {
@@ -29,16 +30,16 @@ export class FileUploadService {
       contentType,
     });
 
-    // const result = await lastValueFrom(
-    //   this.httpService.post(this.documentServiceUrl, form, { params, headers }),
-    // );
+    const result = await lastValueFrom(
+      this.httpService.post(this.documentServiceUrl, form, { params, headers }),
+    );
 
-    const result = {
-      data: {
-        message: 'File upload skipped',
-        fileUrl: 'File upload skipped',
-      },
-    };
+    // const result = {
+    //   data: {
+    //     message: 'File upload skipped',
+    //     fileUrl: 'File upload skipped',
+    //   },
+    // };
 
     const { message, fileUrl } = result.data;
 
