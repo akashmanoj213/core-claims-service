@@ -41,6 +41,5 @@ steps:
             '--set-env-vars', 'CAMUNDA_OPERATE_BASE_URL=https://ont-1.operate.camunda.io/929779f2-9b29-436e-8962-f71554042990',
             '--set-env-vars', 'CAMUNDA_OAUTH_URL=https://login.cloud.camunda.io/oauth/token']
 
-
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-adjudication:$COMMIT_SHA'
