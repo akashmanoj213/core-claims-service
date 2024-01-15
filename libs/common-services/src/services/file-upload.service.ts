@@ -30,16 +30,23 @@ export class FileUploadService {
       contentType,
     });
 
-    const result = await lastValueFrom(
-      this.httpService.post(this.documentServiceUrl, form, { params, headers }),
-    );
+    let result;
 
-    // const result = {
-    //   data: {
-    //     message: 'File upload skipped',
-    //     fileUrl: 'File upload skipped',
-    //   },
-    // };
+    if (process.env.FILE_UPLOAD_ENABLE) {
+      result = await lastValueFrom(
+        this.httpService.post(this.documentServiceUrl, form, {
+          params,
+          headers,
+        }),
+      );
+    } else {
+      result = {
+        data: {
+          message: 'File upload skipped',
+          fileUrl: 'File upload skipped',
+        },
+      };
+    }
 
     const { message, fileUrl } = result.data;
 
