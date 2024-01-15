@@ -35,6 +35,6 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # Secrets
-./apps/core-claims-service/.env
-./apps/claims-adjudication/.env
-./apps/claims-settlement/.env
+apps/core-claims-service/.env
+apps/claims-adjudication/.env
+apps/claims-settlement/.env
