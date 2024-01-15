@@ -35,4 +35,4 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # Secrets
-# .env
+./apps/core-claims-service/.env
