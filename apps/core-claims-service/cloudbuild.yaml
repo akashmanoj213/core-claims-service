@@ -19,7 +19,13 @@ steps:
             '--set-env-vars', 'INSTANCE_CONNECTION_NAME=pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
             '--set-env-vars', 'DB_NAME=Claims',
             '--set-env-vars', 'DB_USER=sahi-user',
-            '--set-env-vars', 'DB_PASS=qwerty']
+            '--set-env-vars', 'DB_PASS=qwerty',
+            '--set-env-vars', 'DB_USERNAME=sahi-user',
+            '--set-env-vars', 'DB_PASSWORD=qwerty',
+            '--set-env-vars', 'DB_HOST=/cloudsql/pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
+            '--set-env-vars', 'DB_PORT=5432',
+            '--set-env-vars', 'PORT=8080',
+            '--set-env-vars', 'MOCK_SERVICE_BASE_URL=https://mock-service-dnhiaxv6nq-el.a.run.app']
 
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/core-claims-service:$COMMIT_SHA'
