@@ -8,4 +8,6 @@ export enum AdjudicationItemStatus {
   REJECTED = 'rejected',
   QUERY = 'query',
   INTERVENTION = 'intervention',
+  INSTANCE_CASHLESS_FWA_COMPLETED = 'instant-cashless FWA completed',
+  INSTANCE_CASHLESS_FWA_FAILED = 'instant-cashless FWA failed',
 }

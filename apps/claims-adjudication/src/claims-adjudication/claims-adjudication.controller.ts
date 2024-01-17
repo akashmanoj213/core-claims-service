@@ -151,6 +151,20 @@ export class ClaimsAdjudicationController {
 
       await Promise.all([nonMedicalFWAPromise, medicalFWAPromise]);
 
+      // If any one of the FWA checks failed, the adjudicationItem status is marked as instant-cashless FWA failed
+      if (
+        [
+          AdjudicationItemStatus.NON_MEDICAL_FWA_FAILED,
+          AdjudicationItemStatus.MEDICAL_FWA_FAILED,
+        ].includes(adjudicationItem.status)
+      ) {
+        adjudicationItem.status =
+          AdjudicationItemStatus.INSTANCE_CASHLESS_FWA_FAILED;
+      } else {
+        adjudicationItem.status =
+          AdjudicationItemStatus.INSTANCE_CASHLESS_FWA_COMPLETED;
+      }
+
       // save after performing both checks
       await this.claimsAdjudicationService.saveAdjudicationItem(
         adjudicationItem,

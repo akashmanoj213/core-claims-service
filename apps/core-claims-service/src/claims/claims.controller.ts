@@ -667,15 +667,18 @@ export class ClaimsController {
           break;
 
         case AdjudicationItemStatus.REJECTED:
-          console.log('Claim Item rejected !');
-          const claimRejectedEventDto =
-            this.prepareClaimRejectedEventDto(claim);
+          {
+            console.log('Claim Item rejected !');
+            const claimRejectedEventDto =
+              this.prepareClaimRejectedEventDto(claim);
 
-          console.log('Publishing to claim-rejected topic.');
-          await this.pubSubService.publishMessage(
-            this.CLAIM_REJECTED_TOPIC,
-            claimRejectedEventDto,
-          );
+            console.log('Publishing to claim-rejected topic.');
+            await this.pubSubService.publishMessage(
+              this.CLAIM_REJECTED_TOPIC,
+              claimRejectedEventDto,
+            );
+          }
+          break;
 
         default:
           break;
@@ -743,13 +746,13 @@ export class ClaimsController {
         instantCashlessFWACompletedEventDto,
       );
 
-      const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
+      // const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
 
-      console.log('Publishing to claim-approved topic.');
-      await this.pubSubService.publishMessage(
-        this.CLAIM_APPROVED_TOPIC,
-        claimApprovedEventDto,
-      );
+      // console.log('Publishing to claim-approved topic.');
+      // await this.pubSubService.publishMessage(
+      //   this.CLAIM_APPROVED_TOPIC,
+      //   claimApprovedEventDto,
+      // );
 
       // sync to PAS
       await this.syncToPas(claim.id);
