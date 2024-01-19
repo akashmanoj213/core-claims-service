@@ -25,7 +25,7 @@ steps:
             '--set-env-vars', 'DB_HOST=/cloudsql/pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
             '--set-env-vars', 'DB_PORT=5432',
             '--set-env-vars', 'MOCK_SERVICE_BASE_URL=https://mock-service-dnhiaxv6nq-el.a.run.app',
-            '--set-env-vars', 'SMS_ENABLE=false',
+            '--set-env-vars', 'SMS_ENABLE=true',
             '--set-env-vars', 'FILE_UPLOAD_ENABLE=false']
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA'
