@@ -746,6 +746,14 @@ export class ClaimsController {
         instantCashlessFWACompletedEventDto,
       );
 
+      const { contactNumber, id: claimId } = claim;
+
+      // notify customer
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Good news, Your claim ID: ${claimId} has been approved instantly!`,
+      );
+
       // const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
 
       // console.log('Publishing to claim-approved topic.');
@@ -771,9 +779,27 @@ export class ClaimsController {
   }
 
   @Post('create-claim-event-handler')
-  handleCreateClaimEvent(@Body() claim: Claim) {
+  async handleCreateClaimEvent(@Body() claim: Claim) {
     this.logger.log('Handler to create claim invoked!');
-    return this.claimsService.createClaim(claim);
+
+    const savedClaim = await this.claimsService.createClaim(claim);
+
+    const { contactNumber } = savedClaim;
+
+    // notify customer
+    await this.notificationService.sendSMS(
+      contactNumber,
+      `A new claim with claim ID : ${
+        savedClaim.id
+      } has been initiated and will be ${
+        savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+      } shortly...`,
+    );
+
+    // sync to PAS
+    await this.syncToPas(savedClaim.id);
+
+    return savedClaim;
   }
 
   @Post('create-topic')
