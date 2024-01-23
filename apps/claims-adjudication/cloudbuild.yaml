@@ -20,7 +20,7 @@ steps:
             '--set-env-vars', 'DB_NAME=Claims-Adjudication',
             '--set-env-vars', 'DB_USER=sahi-user',
             '--set-env-vars', 'DB_PASS=qwerty',
-            '--set-env-vars', 'SMS_ENABLE=false',
+            '--set-env-vars', 'SMS_ENABLE=true',
             '--set-env-vars', 'FILE_UPLOAD_ENABLE=false',
             '--set-env-vars', 'DB_USERNAME=sahi-user',
             '--set-env-vars', 'DB_PASSWORD=qwerty',
