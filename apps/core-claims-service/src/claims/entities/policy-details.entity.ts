@@ -44,6 +44,10 @@ export class PolicyDetails {
   policyWaitingPeriod: number;
   @Column()
   totalNumberOfClaims: number;
+  @Column({
+    nullable: true,
+  })
+  caretakerContactNumber?: string;
   @CreateDateColumn()
   createdAt?: Date;
   @UpdateDateColumn()

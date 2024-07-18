@@ -101,6 +101,7 @@ export class ClaimsService {
 
       claim.policyDetails = policyDetails;
       claim.memberDetails = memberDetails;
+      claim.caretakerContactNumber = policyDetails.caretakerContactNumber;
 
       // check policy variation
       variations.push(

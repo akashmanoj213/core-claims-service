@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsDate, IsNumber, IsString, IsOptional } from 'class-validator';
+import {
+  IsInt,
+  IsDate,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsMobilePhone,
+} from 'class-validator';
 
 export class PolicyDetailsDto {
   @IsInt()
@@ -23,6 +30,8 @@ export class PolicyDetailsDto {
   policyWaitingPeriod: number;
   @IsInt()
   totalNumberOfClaims: number;
+  @IsMobilePhone('en-IN')
+  caretakerContactNumber: string;
   // @ValidateNested()
   // @Type(() => MemberDetailsDto)
   // members: MemberDetailsDto[];

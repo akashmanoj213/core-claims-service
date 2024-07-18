@@ -784,16 +784,23 @@ export class ClaimsController {
 
     const savedClaim = await this.claimsService.createClaim(claim);
 
-    const { contactNumber } = savedClaim;
+    const { contactNumber, caretakerContactNumber } = savedClaim;
 
-    // notify customer
+    // notify patient
+    // await this.notificationService.sendSMS(
+    //   caretakerContactNumber,
+    //   `A new claim with claim ID : ${
+    //     savedClaim.id
+    //   } has been initiated and will be ${
+    //     savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+    //   } shortly...`,
+    // );
+
+    // notify agent using notifications
     await this.notificationService.sendSMS(
       contactNumber,
-      `A new claim with claim ID : ${
-        savedClaim.id
-      } has been initiated and will be ${
-        savedClaim.isInstantCashless ? 'approved' : 'reviewed'
-      } shortly...`,
+      `A patient has been admitted with claimId:${savedClaim.id}.
+      Use this link to check status updates : https://pruinhlth-nprd-dev-scxlyx-7250.el.r.appspot.com/claim#/pasclaim?claimId=${savedClaim.id}`,
     );
 
     // sync to PAS

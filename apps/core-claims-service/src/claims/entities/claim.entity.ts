@@ -49,6 +49,10 @@ export class Claim {
   @Column()
   contactNumber: string;
   @Column({
+    nullable: true,
+  })
+  caretakerContactNumber?: string;
+  @Column({
     type: 'enum',
     enum: ClaimStatus,
     default: ClaimStatus.INITIATED,
