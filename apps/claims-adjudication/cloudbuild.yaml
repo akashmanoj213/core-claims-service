@@ -34,8 +34,8 @@ steps:
             '--set-env-vars', 'CAMUNDA_TASKLIST_BASE_URL=https://bru-2.tasklist.camunda.io/d31ea074-fd1f-49fc-98c2-6263c29c745e',
             '--set-env-vars', 'CAMUNDA_OPTIMIZE_BASE_URL=https://bru-2.optimize.camunda.io/d31ea074-fd1f-49fc-98c2-6263c29c745e',
             '--set-env-vars', 'CAMUNDA_OPERATE_BASE_URL=https://bru-2.operate.camunda.io/d31ea074-fd1f-49fc-98c2-6263c29c745e',
-            '--set-env-vars', 'CAMUNDA_OAUTH_URL=https://login.cloud.camunda.io/oauth/token',
-            '--set-env-vars', 'CAMUNDA_CREDENTIALS_SCOPES=Zeebe,Operate,Tasklist,Optimize']
+            '--set-env-vars', 'CAMUNDA_OAUTH_URL=https://login.cloud.camunda.io/oauth/token']
+            # '--set-env-vars', 'CAMUNDA_CREDENTIALS_SCOPES=Zeebe,Operate,Tasklist,Optimize']
 
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-adjudication:$COMMIT_SHA'
