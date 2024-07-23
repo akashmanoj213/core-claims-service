@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PubSubService } from './pub-sub.service';
+import { ClaimCreatedTemplate, TextMessageTemplate } from '@app/common-classes';
 
 @Injectable()
 export class NotificationService {
@@ -37,6 +38,37 @@ export class NotificationService {
     } catch (error) {
       console.log(
         `Failed to send SMS to ${receiverNumber} due to : ${error.message}.`,
+      );
+    }
+  }
+
+  async sendWhatsappMessage(
+    receiverNumber: string,
+    body: ClaimCreatedTemplate | TextMessageTemplate,
+  ) {
+    console.log('Sending Whatsapp message.');
+
+    const attributes = {
+      type: 'whatsapp',
+    };
+
+    const messageBody = {
+      receiverNumber: '91' + receiverNumber,
+      ...body,
+    };
+
+    try {
+      const messageId = await this.pubSubService.publishMessage(
+        this.NOTIFICATION_TOPIC,
+        messageBody,
+        attributes,
+      );
+      console.log(`SMS messages successfully sent to ${receiverNumber}.`);
+
+      return messageId;
+    } catch (error) {
+      console.log(
+        `Failed to push message to pub/sub topic due to : ${error.message}.`,
       );
     }
   }

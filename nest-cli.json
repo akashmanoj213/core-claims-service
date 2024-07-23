@@ -54,6 +54,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/claims-settlement/tsconfig.app.json"
       }
+    },
+    "common-classes": {
+      "type": "library",
+      "root": "libs/common-classes",
+      "entryFile": "index",
+      "sourceRoot": "libs/common-classes/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common-classes/tsconfig.lib.json"
+      }
     }
   }
 }

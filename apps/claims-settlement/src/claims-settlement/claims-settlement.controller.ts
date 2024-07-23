@@ -18,6 +18,7 @@ import { PubSubService, NotificationService } from '@app/common-services';
 import { ClaimSettlement } from './entities/claim-settlement.entity';
 import { PaymentCompletedEventDto } from './dto/payment-completed-event.dto';
 import { PasClaimSettlementSyncDto } from './dto/pas-claim-settlement-sync.dto';
+import { TextMessageTemplate } from '@app/common-classes';
 
 @Controller('claims-settlement')
 export class ClaimsSettlementController {
@@ -71,13 +72,22 @@ export class ClaimsSettlementController {
         claimSettlement,
       );
 
-      // notify customer
+      // notify patient
       const smsBody = `Your claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`;
       await this.notificationService.sendSMS(
         contactNumber,
         coPayableAmount
           ? smsBody + ` Please pay the remaining ${coPayableAmount}`
           : smsBody,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       //publish to payment-status-changed-topic
@@ -122,13 +132,24 @@ export class ClaimsSettlementController {
       const { contactNumber, approvedPayableAmount, claimId } =
         claimRejectedEventDto;
 
-      // notify customer
+      // notify patient
       const message =
         approvedPayableAmount == 0
           ? `Unfortunately, your claim ID: ${claimId} has been rejected. Please make your payment at the hospital.`
-          : `Your claim ID: ${claimId} has only been partially approved for an amount of ${approvedPayableAmount}. Please contact the hospital to make payment for the remaining amount.`;
+          : `Your claim ID: ${claimId} has only been partially approved for an amount of ${approvedPayableAmount}. Please pay remaining amount at the hospital.`;
 
       await this.notificationService.sendSMS(contactNumber, message);
+
+      // notify agent
+      const agentMessage =
+        approvedPayableAmount == 0
+          ? `Claim ID: ${claimId} has been rejected. Patient has to make payment at the hospital.`
+          : `Claim ID: ${claimId} has only been partially approved for an amount of ${approvedPayableAmount}. Patient has to pay remaining amount at the hospital.`;
+      const textMessageTemplate = new TextMessageTemplate(agentMessage);
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
 
       // figure out how to make partial payments
     } catch (error) {
@@ -171,10 +192,19 @@ export class ClaimsSettlementController {
 
       const { contactNumber, id: claimSettlementId } = claimSettlement;
 
-      // notify customer
+      // notify patient
       await this.notificationService.sendSMS(
         contactNumber,
         `The payment for your claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
+      );
+
+      //notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `The payment for claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       // publish to payment-status-changed-topic

@@ -50,6 +50,7 @@ import {
 import { MedicalBillDetails } from './entities/medical-bill-details.entity';
 import { MedicalBillLineItem } from './entities/medical-bill-line-item.entity';
 import { UpdateFinalSubmissionDto } from './dto/update-final-submission.dto';
+import { ClaimCreatedTemplate, TextMessageTemplate } from '@app/common-classes';
 
 @Controller('claims')
 export class ClaimsController {
@@ -156,7 +157,7 @@ export class ClaimsController {
       this.logger.log('Command executed succesfully');
       // const savedClaim = await this.claimsService.createClaim(initiatedClaim);
 
-      // notify customer
+      // notify patient
       // await this.notificationService.sendSMS(
       //   contactNumber,
       //   `A new claim with claim ID : ${
@@ -258,10 +259,19 @@ export class ClaimsController {
         return 'Documents uploaded successfully !';
       }
 
-      // notify customer
+      // notify patient
       await this.notificationService.sendSMS(
         contactNumber,
         `Your claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       return 'Documents uploaded successfully but data variations detected in claim values !';
@@ -304,9 +314,19 @@ export class ClaimsController {
         `New enhancement claim item created ! claimItemId: ${enhancementClaimItem.id}.`,
       );
 
+      //notify patient
       await this.notificationService.sendSMS(
         contactNumber,
         `An enhancement request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `An enhancement request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       // sync to PAS
@@ -349,9 +369,19 @@ export class ClaimsController {
         `Final claim item created! claimItmeId : ${finalClaimItem.id}.`,
       );
 
+      // notify patient
       await this.notificationService.sendSMS(
         contactNumber,
         `A final discharge request has been placed for your claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `A final discharge request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       //Sync to PAS
@@ -543,10 +573,19 @@ export class ClaimsController {
           nonMedicalFWACompletedEventDto,
         );
 
-      // notify customer
+      // notify patient
       await this.notificationService.sendSMS(
         contactNumber,
-        `Your claim ID: ${claimId} is currently under review. You will recieve a message once it is completed.`,
+        `Your claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       // sync to PAS
@@ -577,13 +616,22 @@ export class ClaimsController {
         );
 
       const {
-        claim: { id: claimId },
+        claim: { id: claimId, contactNumber },
       } = await this.claimsService.updateNonMedicalAdjResults(
         nonMedicalAdjEventCompletedDto,
       );
 
       //Sync to PAS
       await this.syncToPas(claimId);
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} completed non-medical adjudication.`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
     } catch (error) {
       console.log(
         `Error occured while handling non-medical-adj-completed event ! Error: ${error.message}`,
@@ -650,6 +698,7 @@ export class ClaimsController {
       await this.syncToPas(claim.id);
 
       const { status } = medicalAdjCompletedEventDto;
+      let textMessageTemplate;
 
       switch (status) {
         case AdjudicationItemStatus.APPROVED:
@@ -663,6 +712,8 @@ export class ClaimsController {
               this.CLAIM_APPROVED_TOPIC,
               claimApprovedEventDto,
             );
+
+            textMessageTemplate = `Claim ID: ${claim.id} completed non-medical adjudication. Status: APPROVED`;
           }
           break;
 
@@ -677,12 +728,20 @@ export class ClaimsController {
               this.CLAIM_REJECTED_TOPIC,
               claimRejectedEventDto,
             );
+
+            textMessageTemplate = `Claim ID: ${claim.id} completed non-medical adjudication. Status: REJECTED`;
           }
           break;
 
         default:
           break;
       }
+
+      // notify agent
+      await this.notificationService.sendWhatsappMessage(
+        claim.contactNumber,
+        textMessageTemplate,
+      );
     } catch (error) {
       console.log(
         `Error occured while handling medical-adj-completed event ! ${error.message}`,
@@ -748,10 +807,19 @@ export class ClaimsController {
 
       const { contactNumber, id: claimId } = claim;
 
-      // notify customer
+      // notify patient
       await this.notificationService.sendSMS(
         contactNumber,
         `Good news, Your claim ID: ${claimId} has been approved instantly!`,
+      );
+
+      // notify agent
+      const textMessageTemplate = new TextMessageTemplate(
+        `claim ID: ${claimId} has been approved instantly!`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
       );
 
       // const claimApprovedEventDto = this.prepareClaimApprovedEventDto(claim);
@@ -784,23 +852,37 @@ export class ClaimsController {
 
     const savedClaim = await this.claimsService.createClaim(claim);
 
-    const { contactNumber, caretakerContactNumber } = savedClaim;
+    const {
+      contactNumber,
+      caretakerContactNumber,
+      patientAdmissionDetails: { patientFullName },
+      claimType,
+      totalClaimAmount,
+      id: claimId,
+    } = savedClaim;
 
     // notify patient
-    // await this.notificationService.sendSMS(
-    //   caretakerContactNumber,
-    //   `A new claim with claim ID : ${
-    //     savedClaim.id
-    //   } has been initiated and will be ${
-    //     savedClaim.isInstantCashless ? 'approved' : 'reviewed'
-    //   } shortly...`,
-    // );
-
-    // notify agent using notifications
     await this.notificationService.sendSMS(
+      caretakerContactNumber,
+      `A new claim with claim ID : ${
+        savedClaim.id
+      } has been initiated and will be ${
+        savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+      } shortly...`,
+    );
+
+    // notify agent
+    const claimCreatedTemplate = new ClaimCreatedTemplate({
+      claimId,
+      claimType,
+      patientFullName,
+      caretakerContactNumber,
+      totalClaimAmount,
+    });
+
+    await this.notificationService.sendWhatsappMessage(
       contactNumber,
-      `A patient has been admitted with claimId:${savedClaim.id}.
-      Use this link to check status updates : https://pruinhlth-nprd-dev-scxlyx-7250.el.r.appspot.com/claim#/pasclaim?claimId=${savedClaim.id}`,
+      claimCreatedTemplate,
     );
 
     // sync to PAS

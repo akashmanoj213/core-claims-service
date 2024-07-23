@@ -91,7 +91,8 @@
     ],
     "moduleNameMapper": {
       "^@app/common-dto(|/.*)$": "<rootDir>/libs/common-dto/src/$1",
-      "^@app/common-library(|/.*)$": "<rootDir>/libs/common-library/src/$1"
+      "^@app/common-library(|/.*)$": "<rootDir>/libs/common-library/src/$1",
+      "^@app/common-classes(|/.*)$": "<rootDir>/libs/common-classes/src/$1"
     }
   }
 }

@@ -29,6 +29,12 @@
       ],
       "@app/common-services/*": [
         "libs/common-services/src/*"
+      ],
+      "@app/common-classes": [
+        "libs/common-classes/src"
+      ],
+      "@app/common-classes/*": [
+        "libs/common-classes/src/*"
       ]
     }
   }
