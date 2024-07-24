@@ -1,5 +1,5 @@
 export class TextMessageTemplate {
-  type = 'template';
+  type = 'text';
   body: string;
 
   constructor(body: string) {
