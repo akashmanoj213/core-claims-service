@@ -641,17 +641,17 @@ export class ClaimsController {
       await this.syncToPas(claimId);
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `Claim ID: ${claimId} completed non-medical adjudication.`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
-      await this.notificationService.sendSMS(
-        contactNumber,
+      const textMessageTemplate = new TextMessageTemplate(
         `Claim ID: ${claimId} completed non-medical adjudication.`,
       );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
+      // await this.notificationService.sendSMS(
+      //   contactNumber,
+      //   `Claim ID: ${claimId} completed non-medical adjudication.`,
+      // );
     } catch (error) {
       console.log(
         `Error occured while handling non-medical-adj-completed event ! Error: ${error.message}`,
