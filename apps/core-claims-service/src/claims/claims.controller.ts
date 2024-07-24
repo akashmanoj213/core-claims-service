@@ -266,13 +266,13 @@ export class ClaimsController {
       // );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `Claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(
         contactNumber,
         `Claim ID: ${claimId} is currently on hold due to mismatch of data at TPA end. This will be resolved shortly...`,
@@ -325,13 +325,13 @@ export class ClaimsController {
       // );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `An enhancement request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `An enhancement request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(
         contactNumber,
         `An enhancement request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
@@ -384,13 +384,13 @@ export class ClaimsController {
       // );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `A final discharge request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `A final discharge request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(
         contactNumber,
         `A final discharge request has been placed for claim ID: ${claimId} and will be reviewed shortly...`,
@@ -592,17 +592,17 @@ export class ClaimsController {
       // );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `Claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
-      // await this.notificationService.sendSMS(
-      //   contactNumber,
-      //   `Claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Claim ID: ${claimId} is currently under review. You will receive a message once it is completed.`,
+      );
 
       // sync to PAS
       await this.syncToPas(claimId);
@@ -648,10 +648,10 @@ export class ClaimsController {
         contactNumber,
         textMessageTemplate,
       );
-      // await this.notificationService.sendSMS(
-      //   contactNumber,
-      //   `Claim ID: ${claimId} completed non-medical adjudication.`,
-      // );
+      await this.notificationService.sendSMS(
+        contactNumber,
+        `Claim ID: ${claimId} completed non-medical adjudication.`,
+      );
     } catch (error) {
       console.log(
         `Error occured while handling non-medical-adj-completed event ! Error: ${error.message}`,
@@ -758,10 +758,10 @@ export class ClaimsController {
       }
 
       // notify agent
-      // await this.notificationService.sendWhatsappMessage(
-      //   claim.contactNumber,
-      //   new TextMessageTemplate(agentMessage),
-      // );
+      await this.notificationService.sendWhatsappMessage(
+        claim.contactNumber,
+        new TextMessageTemplate(agentMessage),
+      );
       await this.notificationService.sendSMS(claim.contactNumber, agentMessage);
     } catch (error) {
       console.log(
@@ -835,13 +835,13 @@ export class ClaimsController {
       );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `Claim ID: ${claimId} has been approved instantly!`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} has been approved instantly!`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(
         contactNumber,
         'Claim ID: ${claimId} has been approved instantly!',

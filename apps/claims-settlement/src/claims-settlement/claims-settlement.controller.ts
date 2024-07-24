@@ -82,13 +82,13 @@ export class ClaimsSettlementController {
       // );
 
       // notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `Claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `Claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
 
       // notify patient
       const smsBody = `Claim ID: ${claimId} has been approved. A payment for the amount ${approvedPayableAmount} has been initiated to the hospital.`;
@@ -149,11 +149,11 @@ export class ClaimsSettlementController {
         approvedPayableAmount == 0
           ? `Claim ID: ${claimId} has been rejected. Patient has to make payment at the hospital.`
           : `Claim ID: ${claimId} has only been partially approved for an amount of ${approvedPayableAmount}. Patient has to pay remaining amount at the hospital.`;
-      // const textMessageTemplate = new TextMessageTemplate(agentMessage);
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(agentMessage);
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(contactNumber, agentMessage);
 
       // figure out how to make partial payments
@@ -204,13 +204,13 @@ export class ClaimsSettlementController {
       // );
 
       //notify agent
-      // const textMessageTemplate = new TextMessageTemplate(
-      //   `The payment for claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
-      // );
-      // await this.notificationService.sendWhatsappMessage(
-      //   contactNumber,
-      //   textMessageTemplate,
-      // );
+      const textMessageTemplate = new TextMessageTemplate(
+        `The payment for claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
+      );
+      await this.notificationService.sendWhatsappMessage(
+        contactNumber,
+        textMessageTemplate,
+      );
       await this.notificationService.sendSMS(
         contactNumber,
         `The payment for claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
