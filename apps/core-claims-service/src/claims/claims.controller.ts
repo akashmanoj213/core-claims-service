@@ -862,28 +862,32 @@ export class ClaimsController {
     } = savedClaim;
 
     // notify patient
-    await this.notificationService.sendSMS(
-      caretakerContactNumber,
-      `A new claim with claim ID : ${
-        savedClaim.id
-      } has been initiated and will be ${
-        savedClaim.isInstantCashless ? 'approved' : 'reviewed'
-      } shortly...`,
-    );
+    // await this.notificationService.sendSMS(
+    //   caretakerContactNumber,
+    //   `A new claim with claim ID : ${
+    //     savedClaim.id
+    //   } has been initiated and will be ${
+    //     savedClaim.isInstantCashless ? 'approved' : 'reviewed'
+    //   } shortly...`,
+    // );
+
+    //notify agent - temp
+    const message = `A customer has raised a claim with claim ID : ${claimId}. \n Patient name: ${patientFullName}.\n Claim type: ${claimType}.\n Total claim amount: ${totalClaimAmount}.\n \n Claim status : https://pruinhlth-nprd-dev-scxlyx-7250.el.r.appspot.com/claim#/pasclaim?claimId=${claimId}`;
+    await this.notificationService.sendSMS(contactNumber, message);
 
     // notify agent
-    const claimCreatedTemplate = new ClaimCreatedTemplate({
-      claimId,
-      claimType,
-      patientFullName,
-      caretakerContactNumber,
-      totalClaimAmount,
-    });
+    // const claimCreatedTemplate = new ClaimCreatedTemplate({
+    //   claimId,
+    //   claimType,
+    //   patientFullName,
+    //   caretakerContactNumber,
+    //   totalClaimAmount,
+    // });
 
-    await this.notificationService.sendWhatsappMessage(
-      contactNumber,
-      claimCreatedTemplate,
-    );
+    // await this.notificationService.sendWhatsappMessage(
+    //   contactNumber,
+    //   claimCreatedTemplate,
+    // );
 
     // sync to PAS
     await this.syncToPas(savedClaim.id);
