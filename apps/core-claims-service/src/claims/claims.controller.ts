@@ -625,9 +625,8 @@ export class ClaimsController {
       await this.syncToPas(claimId);
 
       // notify agent
-      const textMessageTemplate = new TextMessageTemplate(
-        `Claim ID: ${claimId} completed non-medical adjudication.`,
-      );
+      const agentMessage = `Claim ID: ${claimId} completed non-medical adjudication.`;
+      const textMessageTemplate = new TextMessageTemplate(agentMessage);
       await this.notificationService.sendWhatsappMessage(
         contactNumber,
         textMessageTemplate,
