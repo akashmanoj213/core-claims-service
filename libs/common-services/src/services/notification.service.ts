@@ -23,7 +23,7 @@ export class NotificationService {
     let messageId = null;
 
     try {
-      if (process.env.SMS_ENABLE === 'true') {
+      if (process.env.NODE_ENV !== 'development') {
         messageId = await this.pubSubService.publishMessage(
           this.NOTIFICATION_TOPIC,
           messageBody,
