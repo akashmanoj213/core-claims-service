@@ -897,8 +897,8 @@ export class ClaimsController {
     // );
 
     //notify agent - temp
-    // const message = `A customer has raised a claim with claim ID : ${claimId}. \n Patient name: ${patientFullName}.\n Claim type: ${claimType}.\n Total claim amount: ${totalClaimAmount}.\n \n Claim status : https://pruinhlth-nprd-dev-scxlyx-7250.el.r.appspot.com/claim#/pasclaim?claimId=${claimId}`;
-    // await this.notificationService.sendSMS(contactNumber, message);
+    const message = `A customer has raised a claim with claim ID : ${claimId}. \n Patient name: ${patientFullName}.\n Claim type: ${claimType}.\n Total claim amount: ${totalClaimAmount}.\n \n Claim status : https://pruinhlth-nprd-dev-scxlyx-7250.el.r.appspot.com/claim#/pasclaim?claimId=${claimId}`;
+    await this.notificationService.sendSMS(contactNumber, message);
 
     // notify agent
     const claimCreatedTemplate = new ClaimCreatedTemplate({
