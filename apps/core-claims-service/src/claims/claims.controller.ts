@@ -697,12 +697,10 @@ export class ClaimsController {
       await this.syncToPas(claim.id);
 
       const { status } = medicalAdjCompletedEventDto;
-      let agentMessage =
-        'Claim ID: ${claim.id} completed medical adjudication.';
+      let agentMessage = `Claim ID: ${claim.id} completed medical adjudication.`;
 
       switch (status) {
         case AdjudicationItemStatus.APPROVED:
-          agentMessage += ' Status: APPROVED.';
           if (claim.isFinal) {
             console.log('Final claim item approved.');
             const claimApprovedEventDto =
@@ -715,6 +713,8 @@ export class ClaimsController {
             );
 
             agentMessage += ' Final Submission APPROVED.';
+          } else {
+            agentMessage += ' Status: APPROVED.';
           }
           break;
 

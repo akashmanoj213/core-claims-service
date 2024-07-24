@@ -193,15 +193,12 @@ export class ClaimsSettlementController {
       const { contactNumber, id: claimSettlementId } = claimSettlement;
 
       // notify patient
-      await this.notificationService.sendSMS(
-        contactNumber,
-        `The payment for your claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
-      );
+      const patientMessage = `The payment for your claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`;
+      await this.notificationService.sendSMS(contactNumber, patientMessage);
 
       //notify agent
-      const textMessageTemplate = new TextMessageTemplate(
-        `The payment for claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`,
-      );
+      const agentMessage = `The payment for Claim ID: ${claimId} has been completed. Payment transaction ID: ${paymentId}`;
+      const textMessageTemplate = new TextMessageTemplate(agentMessage);
       await this.notificationService.sendWhatsappMessage(
         contactNumber,
         textMessageTemplate,
