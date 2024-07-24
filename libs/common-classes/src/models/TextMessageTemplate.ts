@@ -3,6 +3,7 @@ export class TextMessageTemplate {
   body: string;
 
   constructor(body: string) {
+    this.type = 'text';
     this.body = body;
   }
 }
