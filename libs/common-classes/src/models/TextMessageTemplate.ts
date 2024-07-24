@@ -1,10 +1,8 @@
 export class TextMessageTemplate {
   type: 'text';
   body: string;
-  preview_url: boolean;
 
-  constructor(body: string, previewUrl = false) {
+  constructor(body: string) {
     this.body = body;
-    this.preview_url = previewUrl;
   }
 }
