@@ -199,6 +199,7 @@ export class ClaimsService {
     const {
       hospitalDetails,
       memberDetails,
+      isHospitalOptedForInstantApproval,
       doctorTreatmentDetails: { ICD11Code },
     } = claim;
 
@@ -206,6 +207,7 @@ export class ClaimsService {
     const instantCashlessTreatment = ['ICD-1000', 'R27', 'K35'];
 
     return (
+      isHospitalOptedForInstantApproval &&
       instantCashlessTreatment.includes(ICD11Code) &&
       hospitalDetails.isInstantCashless &&
       memberDetails.isInstantCashless

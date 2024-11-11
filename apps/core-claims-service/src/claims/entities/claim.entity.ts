@@ -107,6 +107,11 @@ export class Claim {
   isInstantCashless = false;
   @Column({
     type: 'boolean',
+    default: true,
+  })
+  isHospitalOptedForInstantApproval = true;
+  @Column({
+    type: 'boolean',
     default: false,
   })
   isFinal = false;
