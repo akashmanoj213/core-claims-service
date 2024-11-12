@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNotEmptyObject,
@@ -35,6 +36,8 @@ export class CreateClaimDto {
   claimType: ClaimType;
   // @IsNumber()
   // totalClaimAmount: number;
+  @IsBoolean()
+  isHospitalOptedForInstantApproval: boolean;
   @ValidateNested()
   @Type(() => TpaPolicyDetailsDto)
   @IsNotEmptyObject()
