@@ -203,6 +203,20 @@ export class ClaimsService {
       doctorTreatmentDetails: { ICD11Code },
     } = claim;
 
+    console.log(
+      'isHospitalOptedForInstantApproval',
+      isHospitalOptedForInstantApproval,
+    );
+    console.log('ICD11Code', ICD11Code);
+    console.log(
+      'hospitalDetails.isInstantCashless',
+      hospitalDetails.isInstantCashless,
+    );
+    console.log(
+      'memberDetails.isInstantCashless',
+      memberDetails.isInstantCashless,
+    );
+
     // list of instant cashless treatmments
     const instantCashlessTreatment = ['ICD-1000', 'R27', 'K35'];
 
