@@ -218,7 +218,17 @@ export class ClaimsService {
     // );
 
     // list of instant cashless treatmments
-    const instantCashlessTreatment = ['ICD-1000', 'R27', 'K35'];
+    const instantCashlessTreatment = [
+      'ICD-1000',
+      'R27',
+      'K35',
+      '44970',
+      '47600',
+      '58552',
+      '50080',
+      '66982',
+      'OSRC0JZ9',
+    ];
 
     return (
       isHospitalOptedForInstantApproval &&
