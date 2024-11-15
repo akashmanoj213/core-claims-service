@@ -22,6 +22,13 @@ export class PastChronicIllnessDto {
 export enum RoomType {
   AC = 'AC',
   NONAC = 'Non-AC',
+  SEMI_PRIVATE_NON_AC = 'Semi Pvt Non AC',
+  SEMI_PRIVATE_AC = 'Semi Pvt AC',
+  SINGLE_NON_AC = 'Single Non AC',
+  SINGLE_AC = 'Single AC',
+  DELUXE = 'Deluxe',
+  SUIT = 'Suit',
+  GENERAL_WARD = 'General ward/ Economy/ Multi sharing/ Four sharing',
 }
 
 export class PatientAdmissionDetailsDto {
