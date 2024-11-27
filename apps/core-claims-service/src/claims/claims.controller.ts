@@ -69,6 +69,12 @@ export class ClaimsController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @Get('if-address')
+  async getIfAddpress() {
+    const response = await this.claimsService.getIfAddress();
+    return response;
+  }
+
   @Post()
   async create(@Body() createClaimDto: CreateClaimDto) {
     try {
@@ -1118,10 +1124,5 @@ export class ClaimsController {
       this.PAS_CLAIM_SYNC_TOPIC,
       pasClaimSyncEventDto,
     );
-  }
-
-  @Get('if-address')
-  async getIfAddpress() {
-    return this.claimsService.getIfAddress();
   }
 }
