@@ -823,4 +823,16 @@ export class ClaimsService {
   remove(id: number) {
     return this.claimRepository.delete(id);
   }
+
+  async getIfAddress() {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get('https://ifconfig.me/ip'),
+      );
+      return data;
+    } catch (error) {
+      console.error('Error fetching IP address:', error);
+      throw new Error('Failed to fetch IP address');
+    }
+  }
 }

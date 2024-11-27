@@ -1119,4 +1119,9 @@ export class ClaimsController {
       pasClaimSyncEventDto,
     );
   }
+
+  @Get('if-address')
+  async getIfAddpress() {
+    return this.claimsService.getIfAddress();
+  }
 }
