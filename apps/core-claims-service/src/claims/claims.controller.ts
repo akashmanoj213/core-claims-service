@@ -69,11 +69,6 @@ export class ClaimsController {
     private readonly commandBus: CommandBus,
   ) {}
 
-  @Get('if-address')
-  async getIfAddpress() {
-    return this.claimsService.getIfAddress();
-  }
-
   @Post()
   async create(@Body() createClaimDto: CreateClaimDto) {
     try {

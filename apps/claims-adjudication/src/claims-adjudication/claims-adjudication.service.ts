@@ -317,16 +317,4 @@ export class ClaimsAdjudicationService {
 
     return medicalAdjudicationitems;
   }
-
-  async getIfAddress() {
-    try {
-      const { data } = await firstValueFrom(
-        this.httpService.get('https://ifconfig.me/ip'),
-      );
-      return data;
-    } catch (error) {
-      console.error('Error fetching IP address:', error);
-      throw new InternalServerErrorException('Failed to fetch IP address');
-    }
-  }
 }
