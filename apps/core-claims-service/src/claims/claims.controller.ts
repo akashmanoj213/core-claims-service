@@ -71,8 +71,7 @@ export class ClaimsController {
 
   @Get('if-address')
   async getIfAddpress() {
-    const response = await this.claimsService.getIfAddress();
-    return response;
+    return this.claimsService.getIfAddress();
   }
 
   @Post()

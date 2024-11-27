@@ -835,8 +835,8 @@ export class ClaimsService {
       );
       return data;
     } catch (error) {
-      this.logger.log(`Error fetching IP address: ${error.message}`);
-      return new InternalServerErrorException('Failed to fetch IP address');
+      console.error('Error fetching IP address:', error);
+      throw new InternalServerErrorException('Failed to fetch IP address');
     }
   }
 }
