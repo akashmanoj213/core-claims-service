@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AdjudicationItem } from './entities/adjudication-item.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -316,5 +316,17 @@ export class ClaimsAdjudicationService {
     );
 
     return medicalAdjudicationitems;
+  }
+
+  async getIfAddress() {
+    try {
+      const { data } = await firstValueFrom(
+        this.httpService.get('https://ifconfig.me/ip'),
+      );
+      return data;
+    } catch (error) {
+      console.error('Error fetching IP address:', error);
+      throw new InternalServerErrorException('Failed to fetch IP address');
+    }
   }
 }

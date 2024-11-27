@@ -53,6 +53,11 @@ export class ClaimsAdjudicationController {
     private pubSubService: PubSubService,
   ) {}
 
+  @Get('if-address')
+  async getIfAddpress() {
+    return this.claimsAdjudicationService.getIfAddress();
+  }
+
   @Post('claim-initiated-handler')
   async claimInitiatedHandler(@Body() pubSubMessage: PubSubMessageDto) {
     console.log('-------------------  -------------------');
