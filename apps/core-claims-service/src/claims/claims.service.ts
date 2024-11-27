@@ -833,7 +833,7 @@ export class ClaimsService {
       const { data } = await firstValueFrom(
         this.httpService.get('https://ifconfig.me/ip'),
       );
-      return data;
+      return data.toString();
     } catch (error) {
       this.logger.log(`Error fetching IP address: ${error.message}`);
       return new InternalServerErrorException('Failed to fetch IP address');
