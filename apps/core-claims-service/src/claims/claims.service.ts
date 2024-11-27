@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { Claim } from './entities/claim.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -831,8 +835,8 @@ export class ClaimsService {
       );
       return data;
     } catch (error) {
-      console.error('Error fetching IP address:', error);
-      throw new Error('Failed to fetch IP address');
+      this.logger.log(`Error fetching IP address: ${error.message}`);
+      return new InternalServerErrorException('Failed to fetch IP address');
     }
   }
 }
