@@ -10,12 +10,12 @@ export class WinstonLoggerService implements LoggerService {
     const loggingWinston = new LoggingWinston();
     this.logger = winston.createLogger({
       level: 'info',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.printf(({ timestamp, level, message }) => {
-          return `${timestamp} [${level}]: ${message}`;
-        }),
-      ),
+      // format: winston.format.combine(
+      //   winston.format.timestamp(),
+      //   winston.format.printf(({ timestamp, level, message }) => {
+      //     return `${timestamp} [${level}]: ${message}`;
+      //   }),
+      // ),
       transports:
         process.env.NODE_ENV === 'local'
           ? [new winston.transports.Console()]
