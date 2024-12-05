@@ -322,4 +322,17 @@ export class ClaimsAdjudicationService {
     console.log('Service: claim adj working fine...');
     return 'Claim adj working fine...';
   }
+
+  async getTestChainResponse() {
+    console.log('Service: Calling claim-settlement API...');
+
+    const response = await firstValueFrom(
+      this.httpService.get(
+        'https://sahi-claims-settlement-453999121690.asia-south1.run.app/claims-settlement/test',
+      ),
+    );
+
+    console.log('Service: Response received from claim-settlement API.');
+    return response.data;
+  }
 }

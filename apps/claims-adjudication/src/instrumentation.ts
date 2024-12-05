@@ -15,7 +15,7 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 
 const otelSdk = new NodeSDK({
   resource: new Resource({
-    [ATTR_SERVICE_NAME]: 'yourServiceName',
+    [ATTR_SERVICE_NAME]: 'claims-adjudication',
     [ATTR_SERVICE_VERSION]: '1.0',
   }),
   traceExporter: new ConsoleSpanExporter(),

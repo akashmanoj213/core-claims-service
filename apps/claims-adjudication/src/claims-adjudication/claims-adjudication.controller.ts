@@ -469,6 +469,12 @@ export class ClaimsAdjudicationController {
     return this.claimsAdjudicationService.getTestResponse();
   }
 
+  @Get('test-chain')
+  testChain() {
+    console.log('Controller: claim adj controller output.');
+    return this.claimsAdjudicationService.getTestChainResponse();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.claimsAdjudicationService.findAdjudicationItem(id);
