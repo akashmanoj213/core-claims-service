@@ -1,3 +1,4 @@
+import { LoggingWinston } from '@google-cloud/logging-winston';
 import { ConsoleLogger, Injectable } from '@nestjs/common';
 import * as winston from 'winston';
 
@@ -7,6 +8,7 @@ export class WinstonLoggerService extends ConsoleLogger {
 
   constructor() {
     super();
+    const loggingWinston = new LoggingWinston();
     this.logger = winston.createLogger({
       level: 'info',
       //   format: winston.format.combine(
@@ -15,32 +17,32 @@ export class WinstonLoggerService extends ConsoleLogger {
       //       return `${timestamp} [${level}]: ${message}`;
       //     }),
       //   ),
-      transports: [new winston.transports.Console()],
+      transports: [loggingWinston],
     });
   }
 
   log(message: any, ...optionalParams: any[]) {
     this.logger.info(message, ...optionalParams);
-    super.log(message, ...optionalParams);
+    // super.log(message, ...optionalParams);
   }
 
   error(message: any, ...optionalParams: any[]) {
     this.logger.error(message, ...optionalParams);
-    super.error(message, ...optionalParams);
+    // super.error(message, ...optionalParams);
   }
 
   warn(message: any, ...optionalParams: any[]) {
     this.logger.warn(message, ...optionalParams);
-    super.warn(message, ...optionalParams);
+    // super.warn(message, ...optionalParams);
   }
 
   debug(message: any, ...optionalParams: any[]) {
     this.logger.debug(message, ...optionalParams);
-    super.debug(message, ...optionalParams);
+    // super.debug(message, ...optionalParams);
   }
 
   verbose(message: any, ...optionalParams: any[]) {
     this.logger.verbose(message, ...optionalParams);
-    super.verbose(message, ...optionalParams);
+    // super.verbose(message, ...optionalParams);
   }
 }
