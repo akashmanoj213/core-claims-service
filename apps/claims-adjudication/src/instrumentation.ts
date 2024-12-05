@@ -12,32 +12,34 @@ import {
   ExpressLayerType,
 } from '@opentelemetry/instrumentation-express';
 
-const otelSdk = new NodeSDK({
-  resource: new Resource({
-    [ATTR_SERVICE_NAME]: 'claims-adj-service',
-    [ATTR_SERVICE_VERSION]: '1.0',
-  }),
-  traceExporter: new ConsoleSpanExporter(),
-  instrumentations: [
-    // new HttpInstrumentation(),
-    new ExpressInstrumentation({
-      ignoreLayersType: [
-        ExpressLayerType.MIDDLEWARE,
-        ExpressLayerType.ROUTER,
-        ExpressLayerType.REQUEST_HANDLER,
-      ],
+export function initializeOtelSdk(serviceName: string) {
+  const otelSdk = new NodeSDK({
+    resource: new Resource({
+      [ATTR_SERVICE_NAME]: serviceName,
+      [ATTR_SERVICE_VERSION]: '1.0',
     }),
-  ],
-});
+    traceExporter: new ConsoleSpanExporter(),
+    instrumentations: [
+      new HttpInstrumentation(),
+      new ExpressInstrumentation({
+        ignoreLayersType: [
+          ExpressLayerType.MIDDLEWARE,
+          ExpressLayerType.ROUTER,
+          ExpressLayerType.REQUEST_HANDLER,
+        ],
+      }),
+    ],
+  });
 
-process.on('SIGTERM', () => {
-  otelSdk
-    .shutdown()
-    .then(
-      () => console.log('SDK shut down successfully'),
-      (err) => console.log('Error shutting down SDK', err.message),
-    )
-    .finally(() => process.exit(0));
-});
+  process.on('SIGTERM', () => {
+    otelSdk
+      .shutdown()
+      .then(
+        () => console.log('SDK shut down successfully'),
+        (err) => console.log('Error shutting down SDK', err.message),
+      )
+      .finally(() => process.exit(0));
+  });
 
-export { otelSdk };
+  return otelSdk;
+}

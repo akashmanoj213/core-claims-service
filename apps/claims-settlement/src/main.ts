@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { otelSdk } from './instrumentation';
 import { WinstonLoggerService } from '@app/common-services';
+import { initializeOtelSdk } from './instrumentation';
 
 async function bootstrap() {
+  const serviceName = 'cats-service'; // or any other service name
+  const otelSdk = initializeOtelSdk(serviceName);
   otelSdk.start();
+
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(WinstonLoggerService));
 
