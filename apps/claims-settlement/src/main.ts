@@ -3,8 +3,10 @@ import { AppModule } from './app.module';
 import { Logger } from 'nestjs-pino';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { otelSdk } from './instrumentation';
 
 async function bootstrap() {
+  otelSdk.start();
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
