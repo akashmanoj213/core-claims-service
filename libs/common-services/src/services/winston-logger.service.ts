@@ -1,48 +1,49 @@
 import { LoggingWinston } from '@google-cloud/logging-winston';
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { Injectable, LoggerService } from '@nestjs/common';
 import * as winston from 'winston';
 
 @Injectable()
-export class WinstonLoggerService extends ConsoleLogger {
+export class WinstonLoggerService implements LoggerService {
   private readonly logger: winston.Logger;
 
   constructor() {
-    super();
     const loggingWinston = new LoggingWinston();
     this.logger = winston.createLogger({
       level: 'info',
-      //   format: winston.format.combine(
-      //     winston.format.timestamp(),
-      //     winston.format.printf(({ timestamp, level, message }) => {
-      //       return `${timestamp} [${level}]: ${message}`;
-      //     }),
-      //   ),
-      transports: [loggingWinston],
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({ timestamp, level, message }) => {
+          return `${timestamp} [${level}]: ${message}`;
+        }),
+      ),
+      transports:
+        process.env.NODE_ENV === 'local'
+          ? [new winston.transports.Console()]
+          : [loggingWinston],
     });
   }
 
   log(message: any, ...optionalParams: any[]) {
     this.logger.info(message, ...optionalParams);
-    // super.log(message, ...optionalParams);
+  }
+
+  fatal(message: any, ...optionalParams: any[]) {
+    this.logger.log('fatal', message, ...optionalParams);
   }
 
   error(message: any, ...optionalParams: any[]) {
     this.logger.error(message, ...optionalParams);
-    // super.error(message, ...optionalParams);
   }
 
   warn(message: any, ...optionalParams: any[]) {
     this.logger.warn(message, ...optionalParams);
-    // super.warn(message, ...optionalParams);
   }
 
   debug(message: any, ...optionalParams: any[]) {
     this.logger.debug(message, ...optionalParams);
-    // super.debug(message, ...optionalParams);
   }
 
   verbose(message: any, ...optionalParams: any[]) {
     this.logger.verbose(message, ...optionalParams);
-    // super.verbose(message, ...optionalParams);
   }
 }
