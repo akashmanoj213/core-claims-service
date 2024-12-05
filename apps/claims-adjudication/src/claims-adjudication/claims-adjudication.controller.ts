@@ -6,6 +6,7 @@ import {
   Param,
   InternalServerErrorException,
   Query,
+  Logger,
 } from '@nestjs/common';
 import { ClaimsAdjudicationService } from './claims-adjudication.service';
 import { AdjudicationItem } from './entities/adjudication-item.entity';
@@ -47,6 +48,7 @@ export class ClaimsAdjudicationController {
   private readonly PAS_CLAIM_ADJ_SYNC_TOPIC = 'pas-claim-adj-sync';
   private readonly INSTANT_CASHLESS_FWA_COMPLETED_TOPIC =
     'instant-cashless-fwa-completed';
+  private readonly logger = new Logger(ClaimsAdjudicationController.name);
 
   constructor(
     private readonly claimsAdjudicationService: ClaimsAdjudicationService,
@@ -465,7 +467,8 @@ export class ClaimsAdjudicationController {
 
   @Get('test')
   test() {
-    console.log('Controller: claim adj controller is working fine.');
+    this.logger.log('Controller: claim adj controller is working fine.');
+    this.logger.debug('Controller: debug message');
     return this.claimsAdjudicationService.getTestResponse();
   }
 

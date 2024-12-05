@@ -1,2 +1,2 @@
-export * from './common-services/winston-logger.module';
-export * from './common-services/winston-logger.service';
+export * from './winston-logger.module';
+export * from './winston-logger.service';

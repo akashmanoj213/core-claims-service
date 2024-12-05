@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { AdjudicationItem } from './entities/adjudication-item.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,6 +22,7 @@ import { firstValueFrom } from 'rxjs';
 export class ClaimsAdjudicationService {
   private readonly NON_MEDICAL_FWA_PROCESS_ID = 'nonMedicalFWAProcess';
   private readonly MEDICAL_FWA_PROCESS_ID = 'medicalFWAProcess';
+  private readonly logger = new Logger(ClaimsAdjudicationService.name);
 
   constructor(
     @InjectRepository(AdjudicationItem, 'claims-adjudication')
@@ -319,12 +324,12 @@ export class ClaimsAdjudicationService {
   }
 
   async getTestResponse() {
-    console.log('Service: claim adj working fine...');
+    this.logger.log('Service: claim adj working fine...');
     return 'Claim adj working fine...';
   }
 
   async getTestChainResponse() {
-    console.log('Service: Calling claim-settlement API...');
+    this.logger.log('Service: Calling claim-settlement API...');
 
     const response = await firstValueFrom(
       this.httpService.get(
@@ -332,7 +337,7 @@ export class ClaimsAdjudicationService {
       ),
     );
 
-    console.log('Service: Response received from claim-settlement API.');
+    this.logger.log('Service: Response received from claim-settlement API.');
     return response.data;
   }
 }

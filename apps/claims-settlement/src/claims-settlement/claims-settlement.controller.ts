@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { ClaimsSettlementService } from './claims-settlement.service';
 import {
@@ -25,6 +26,7 @@ export class ClaimsSettlementController {
   private readonly PAYMENT_STATUS_CHANGED_TOPIC = 'payment-status-changed';
   private readonly PAS_CLAIM_SETTLEMENT_SYNC_TOPIC =
     'pas-claim-settlement-sync';
+  private readonly logger = new Logger(ClaimsSettlementController.name);
 
   constructor(
     private pubSubService: PubSubService,
@@ -245,7 +247,9 @@ export class ClaimsSettlementController {
 
   @Get('test')
   test() {
-    console.log('Controller: claim settlement controller is working fine.');
+    this.logger.log('Controller: claim settlement controller is working fine.');
+    this.logger.debug('Controller: debug message');
+
     return this.claimsSettlementService.getTestResponse();
   }
 

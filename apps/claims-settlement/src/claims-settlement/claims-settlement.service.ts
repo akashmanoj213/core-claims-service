@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ClaimSettlement } from './entities/claim-settlement.entity';
 import { Repository } from 'typeorm';
@@ -9,6 +9,8 @@ import { ClaimType, ClaimApprovedEventDto } from '@app/common-dto';
 
 @Injectable()
 export class ClaimsSettlementService {
+  private readonly logger = new Logger(ClaimsSettlementService.name);
+
   constructor(
     @InjectRepository(ClaimSettlement, 'claims-settlement')
     private claimSettlementRepository: Repository<ClaimSettlement>,
@@ -79,7 +81,7 @@ export class ClaimsSettlementService {
   }
 
   async getTestResponse() {
-    console.log('Service: claim settlement working fine...');
+    this.logger.log('Service: claim settlement working fine...');
     return 'Claim settlement working fine...';
   }
 }
