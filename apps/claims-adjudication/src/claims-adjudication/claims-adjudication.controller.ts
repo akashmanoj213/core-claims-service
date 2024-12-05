@@ -474,7 +474,7 @@ export class ClaimsAdjudicationController {
 
   @Get('test-chain')
   testChain() {
-    console.log('Controller: claim adj controller output.');
+    this.logger.log('Controller: claim adj controller output.');
     return this.claimsAdjudicationService.getTestChainResponse();
   }
 
