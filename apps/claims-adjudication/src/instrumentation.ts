@@ -7,6 +7,10 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import {
+  ExpressInstrumentation,
+  ExpressLayerType,
+} from '@opentelemetry/instrumentation-express';
 
 const otelSdk = new NodeSDK({
   resource: new Resource({
@@ -14,7 +18,16 @@ const otelSdk = new NodeSDK({
     [ATTR_SERVICE_VERSION]: '1.0',
   }),
   traceExporter: new ConsoleSpanExporter(),
-  instrumentations: [new HttpInstrumentation()],
+  instrumentations: [
+    new HttpInstrumentation(),
+    new ExpressInstrumentation({
+      ignoreLayersType: [
+        ExpressLayerType.MIDDLEWARE,
+        ExpressLayerType.ROUTER,
+        ExpressLayerType.REQUEST_HANDLER,
+      ],
+    }),
+  ],
 });
 
 process.on('SIGTERM', () => {
