@@ -16,6 +16,7 @@ import {
   PeriodicExportingMetricReader,
   ConsoleMetricExporter,
 } from '@opentelemetry/sdk-metrics';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 
 const otelSdk = new NodeSDK({
   resource: new Resource({
@@ -23,14 +24,14 @@ const otelSdk = new NodeSDK({
     [ATTR_SERVICE_VERSION]: '1.0',
   }),
   traceExporter: new ConsoleSpanExporter(),
-  logRecordProcessors: [
-    new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
-  ],
-  metricReader: new PeriodicExportingMetricReader({
-    exporter: new ConsoleMetricExporter(),
-  }),
+  // logRecordProcessors: [
+  //   new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
+  // ],
+  // metricReader: new PeriodicExportingMetricReader({
+  //   exporter: new ConsoleMetricExporter(),
+  // }),
   //   instrumentations: [getNodeAutoInstrumentations()],
-  instrumentations: [new HttpInstrumentation(), new WinstonInstrumentation()],
+  instrumentations: [new HttpInstrumentation(), new ExpressInstrumentation()],
 });
 
 process.on('SIGTERM', () => {
