@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { otelSdk } from './instrumentation';
-import { WinstonLoggerService } from '@app/common-services/winston-logger';
+import { WinstonLoggerService } from '@app/common-services';
 
 async function bootstrap() {
   otelSdk.start();

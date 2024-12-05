@@ -32,7 +32,7 @@ const otelSdk = new NodeSDK({
     new ExpressInstrumentation({
       ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
     }),
-    // new WinstonInstrumentation(),
+    new WinstonInstrumentation(),
     new NestInstrumentation(),
   ],
 });
