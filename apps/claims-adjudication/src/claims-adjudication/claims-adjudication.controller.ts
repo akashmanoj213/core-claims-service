@@ -468,7 +468,7 @@ export class ClaimsAdjudicationController {
   @Get('test')
   test() {
     this.logger.log('Controller: claim adj controller is working fine.');
-    this.logger.debug('Controller: debug message');
+    this.logger.debug('Controller: debug message.');
     return this.claimsAdjudicationService.getTestResponse();
   }
 

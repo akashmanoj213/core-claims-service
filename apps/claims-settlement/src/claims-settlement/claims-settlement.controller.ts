@@ -248,7 +248,7 @@ export class ClaimsSettlementController {
   @Get('test')
   test() {
     this.logger.log('Controller: claim settlement controller is working fine.');
-    this.logger.debug('Controller: debug message');
+    this.logger.debug('Controller: debug message.');
 
     return this.claimsSettlementService.getTestResponse();
   }
