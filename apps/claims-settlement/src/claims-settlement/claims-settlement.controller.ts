@@ -243,13 +243,19 @@ export class ClaimsSettlementController {
     );
   }
 
-  @Get()
-  findAll() {
-    return this.claimsSettlementService.findAll();
+  @Get('test')
+  test() {
+    console.log('Controller: claim settlement controller is working fine.');
+    return this.claimsSettlementService.getTestResponse();
   }
 
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.claimsSettlementService.findOne(id);
+  }
+
+  @Get()
+  findAll() {
+    return this.claimsSettlementService.findAll();
   }
 }

@@ -317,4 +317,9 @@ export class ClaimsAdjudicationService {
 
     return medicalAdjudicationitems;
   }
+
+  async getTestResponse() {
+    console.log('Service: claim adj working fine...');
+    return 'Claim adj working fine...';
+  }
 }

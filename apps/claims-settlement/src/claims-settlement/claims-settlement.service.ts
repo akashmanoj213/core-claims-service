@@ -77,4 +77,9 @@ export class ClaimsSettlementService {
   findOneByClaimId(claimId: number) {
     return this.claimSettlementRepository.findOne({ where: { claimId } });
   }
+
+  async getTestResponse() {
+    console.log('Service: claim settlement working fine...');
+    return 'Claim settlement working fine...';
+  }
 }

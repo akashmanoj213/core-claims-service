@@ -420,20 +420,6 @@ export class ClaimsAdjudicationController {
     }
   }
 
-  @Get()
-  findByClaimitem(@Query('claimItemId') claimItemId: number) {
-    return this.claimsAdjudicationService.findAdjudicationItemByClaimItemId(
-      claimItemId,
-    );
-  }
-
-  @Get('claim/:claimId')
-  findAllByClaimId(@Param('claimId') claimId: number) {
-    return this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
-      claimId,
-    );
-  }
-
   @Get('non-medical-adjudication')
   getNonMedicalAdjudicationItems() {
     try {
@@ -470,9 +456,29 @@ export class ClaimsAdjudicationController {
     }
   }
 
+  @Get('claim/:claimId')
+  findAllByClaimId(@Param('claimId') claimId: number) {
+    return this.claimsAdjudicationService.findAdjudicationItemsByClaimId(
+      claimId,
+    );
+  }
+
+  @Get('test')
+  test() {
+    console.log('Controller: claim adj controller is working fine.');
+    return this.claimsAdjudicationService.getTestResponse();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number) {
     return this.claimsAdjudicationService.findAdjudicationItem(id);
+  }
+
+  @Get()
+  findByClaimitem(@Query('claimItemId') claimItemId: number) {
+    return this.claimsAdjudicationService.findAdjudicationItemByClaimItemId(
+      claimItemId,
+    );
   }
 
   async prepareAdjudicationItem(

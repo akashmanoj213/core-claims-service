@@ -919,10 +919,15 @@ export class ClaimsController {
     );
   }
 
-  @Get()
-  findAll() {
-    this.logger.log('Fetching all claims...');
-    return this.claimsService.findAll();
+  @Get('stream/:streamId')
+  findOneByStreamId(@Param('streamId') streamId: string) {
+    return this.claimsService.findClaimBySreamId(streamId);
+  }
+
+  @Get('test')
+  test() {
+    console.log('Controller: core claims controller is working fine.');
+    return this.claimsService.getTestResponse();
   }
 
   @Get(':id')
@@ -930,9 +935,10 @@ export class ClaimsController {
     return this.claimsService.findClaim(id);
   }
 
-  @Get('stream/:streamId')
-  findOneByStreamId(@Param('streamId') streamId: string) {
-    return this.claimsService.findClaimBySreamId(streamId);
+  @Get()
+  findAll() {
+    this.logger.log('Fetching all claims...');
+    return this.claimsService.findAll();
   }
 
   @Delete(':id')

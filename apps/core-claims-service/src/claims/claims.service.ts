@@ -827,4 +827,9 @@ export class ClaimsService {
   remove(id: number) {
     return this.claimRepository.delete(id);
   }
+
+  async getTestResponse() {
+    console.log('Service: core claim working fine...');
+    return 'Core claim working fine...';
+  }
 }
