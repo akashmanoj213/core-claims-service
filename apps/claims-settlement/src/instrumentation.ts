@@ -36,7 +36,6 @@ const otelSdk = new NodeSDK({
         ExpressLayerType.REQUEST_HANDLER,
       ],
     }),
-    new WinstonInstrumentation(),
   ],
 });
 

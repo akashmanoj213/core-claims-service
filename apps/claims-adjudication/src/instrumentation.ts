@@ -27,11 +27,7 @@ const otelSdk = new NodeSDK({
   //     exporter: new ConsoleMetricExporter(),
   //   }),
   //   instrumentations: [getNodeAutoInstrumentations()],
-  instrumentations: [
-    new HttpInstrumentation(),
-    new WinstonInstrumentation(),
-    new NestInstrumentation(),
-  ],
+  instrumentations: [new HttpInstrumentation(), new WinstonInstrumentation()],
 });
 
 process.on('SIGTERM', () => {
