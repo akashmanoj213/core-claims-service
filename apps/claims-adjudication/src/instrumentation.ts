@@ -19,7 +19,7 @@ const otelSdk = new NodeSDK({
   }),
   traceExporter: new ConsoleSpanExporter(),
   instrumentations: [
-    new HttpInstrumentation(),
+    // new HttpInstrumentation(),
     new ExpressInstrumentation({
       ignoreLayersType: [
         ExpressLayerType.MIDDLEWARE,
