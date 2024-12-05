@@ -1,29 +1,40 @@
 /*instrumentation.ts*/
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import {
-  PeriodicExportingMetricReader,
-  ConsoleMetricExporter,
-} from '@opentelemetry/sdk-metrics';
 import { Resource } from '@opentelemetry/resources';
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
+import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
+import {
+  ExpressInstrumentation,
+  ExpressLayerType,
+} from '@opentelemetry/instrumentation-express';
 
 const otelSdk = new NodeSDK({
   resource: new Resource({
-    [ATTR_SERVICE_NAME]: 'claims-settlement',
+    [ATTR_SERVICE_NAME]: 'claims-settlement-service',
     [ATTR_SERVICE_VERSION]: '1.0',
   }),
   traceExporter: new ConsoleSpanExporter(),
+  //   logRecordProcessors: [
+  //     new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
+  //   ],
   //   metricReader: new PeriodicExportingMetricReader({
   //     exporter: new ConsoleMetricExporter(),
   //   }),
   //   instrumentations: [getNodeAutoInstrumentations()],
-  instrumentations: [new HttpInstrumentation()],
+  instrumentations: [
+    new HttpInstrumentation(),
+    new ExpressInstrumentation({
+      ignoreLayersType: [ExpressLayerType.MIDDLEWARE],
+    }),
+    // new WinstonInstrumentation(),
+    new NestInstrumentation(),
+  ],
 });
 
 process.on('SIGTERM', () => {
