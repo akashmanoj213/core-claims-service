@@ -7,16 +7,6 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
-import {
-  SimpleLogRecordProcessor,
-  ConsoleLogRecordExporter,
-} from '@opentelemetry/sdk-logs';
-import {
-  PeriodicExportingMetricReader,
-  ConsoleMetricExporter,
-} from '@opentelemetry/sdk-metrics';
-import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 
 const otelSdk = new NodeSDK({
   resource: new Resource({
@@ -24,14 +14,7 @@ const otelSdk = new NodeSDK({
     [ATTR_SERVICE_VERSION]: '1.0',
   }),
   traceExporter: new ConsoleSpanExporter(),
-  // logRecordProcessors: [
-  //   new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
-  // ],
-  // metricReader: new PeriodicExportingMetricReader({
-  //   exporter: new ConsoleMetricExporter(),
-  // }),
-  //   instrumentations: [getNodeAutoInstrumentations()],
-  instrumentations: [new HttpInstrumentation(), new ExpressInstrumentation()],
+  instrumentations: [new HttpInstrumentation()],
 });
 
 process.on('SIGTERM', () => {
@@ -45,4 +28,3 @@ process.on('SIGTERM', () => {
 });
 
 export { otelSdk };
-// otelSdk.start();

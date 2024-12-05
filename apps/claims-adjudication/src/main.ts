@@ -3,12 +3,12 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { otelSdk } from './instrumentation';
-import { WinstonLoggerService } from '@app/common-services';
+// import { WinstonLoggerService } from '@app/common-services';
 
 async function bootstrap() {
   otelSdk.start();
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-  app.useLogger(app.get(WinstonLoggerService));
+  // app.useLogger(app.get(WinstonLoggerService));
 
   const config = new DocumentBuilder()
     .setTitle('Claims Adjudication APIs')
