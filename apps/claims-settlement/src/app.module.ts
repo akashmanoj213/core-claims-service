@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { LoggerModule } from 'nestjs-pino';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.module';
@@ -8,11 +7,6 @@ import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.mo
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: 'apps/claims-settlement/.env' }),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        autoLogging: false,
-      },
-    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,

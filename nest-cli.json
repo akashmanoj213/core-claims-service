@@ -63,6 +63,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/common-classes/tsconfig.lib.json"
       }
+    },
+    "common-services/winston-logger": {
+      "type": "library",
+      "root": "libs/common-services/winston-logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/common-services/winston-logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common-services/winston-logger/tsconfig.lib.json"
+      }
     }
   }
 }
