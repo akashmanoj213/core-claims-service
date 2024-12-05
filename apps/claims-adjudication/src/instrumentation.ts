@@ -28,7 +28,6 @@ const otelSdk = new NodeSDK({
   //   }),
   //   instrumentations: [getNodeAutoInstrumentations()],
   instrumentations: [
-    new HttpInstrumentation(),
     new ExpressInstrumentation({
       ignoreLayersType: [
         ExpressLayerType.MIDDLEWARE,
