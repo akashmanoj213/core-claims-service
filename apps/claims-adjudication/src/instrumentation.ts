@@ -20,10 +20,7 @@ export function initializeOtelSdk(serviceName: string) {
     }),
     traceExporter: new ConsoleSpanExporter(),
     instrumentations: [
-      new HttpInstrumentation({
-        disableIncomingRequestInstrumentation: true,
-        disableOutgoingRequestInstrumentation: true,
-      }),
+      new HttpInstrumentation(),
       new ExpressInstrumentation({
         ignoreLayersType: [
           ExpressLayerType.MIDDLEWARE,
