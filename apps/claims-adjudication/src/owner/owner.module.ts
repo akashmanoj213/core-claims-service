@@ -6,6 +6,7 @@ import { GRPC_PROJECT_PACKAGE_NAME } from '@app/common-library';
 import { join } from 'path';
 import { GRPC_SERVICE } from './constants';
 import { CommonServicesModule } from '@app/common-services';
+import * as grpc from '@grpc/grpc-js';
 
 @Module({
   imports: [
@@ -14,9 +15,10 @@ import { CommonServicesModule } from '@app/common-services';
         name: GRPC_SERVICE,
         transport: Transport.GRPC,
         options: {
-          url: 'sahi-grpc-project-453999121690.asia-south1.run.app',
+          url: 'dns://sahi-grpc-project-453999121690.asia-south1.run.app',
           package: GRPC_PROJECT_PACKAGE_NAME,
           protoPath: join(__dirname, '../grpc-project.proto'),
+          credentials: grpc.credentials.createSsl(),
         },
       },
     ]),
