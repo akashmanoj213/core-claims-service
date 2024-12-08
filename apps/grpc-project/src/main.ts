@@ -23,6 +23,11 @@ async function bootstrap() {
   );
 
   app.useLogger(app.get(WinstonLoggerService));
+  const app2 = await NestFactory.create(GrpcProjectModule, {
+    bufferLogs: true,
+  });
+
   await app.listen();
+  await app2.listen(8080);
 }
 bootstrap();
