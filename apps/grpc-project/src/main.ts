@@ -19,6 +19,7 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, '../grpc-project.proto'),
       package: GRPC_PROJECT_PACKAGE_NAME,
+      url: `0.0.0.0:${process.env.GRPC_PORT || 3000}`,
     },
   });
   app.useLogger(app.get(WinstonLoggerService));
@@ -43,4 +44,8 @@ async function bootstrap() {
   // await app.listen();
   // await app2.listen(8080);
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('Error starting the application', err);
+  process.exit(1);
+});
