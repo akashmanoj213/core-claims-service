@@ -24,6 +24,7 @@ async function bootstrap() {
   });
   app.useLogger(app.get(WinstonLoggerService));
 
+  console.log('PORT : ', process.env.PORT);
   await app.startAllMicroservices();
   await app.listen(parseInt(process.env.PORT) || 8080);
 

@@ -38,8 +38,6 @@ steps:
         'NODE_ENV=local',
         '--set-env-vars',
         'GRPC_PORT=3000',
-        '--set-env-vars',
-        'PORT=3001',
       ]
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/grpc-project:$COMMIT_SHA'
