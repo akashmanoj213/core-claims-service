@@ -4,3 +4,11 @@ services:
       context: ../../
       dockerfile: ./apps/claims-adjudication/Dockerfile
     image: 'claims-adjudication'
+    ports:
+      - "8080:8080"
+    depends_on:
+      - grpc-project
+    grpc-project:
+      image: grpc-project:latest
+      ports:
+        - "3000:3000"

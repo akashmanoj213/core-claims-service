@@ -15,5 +15,8 @@ COPY . .
 # Creates a "dist" folder with the production build
 RUN npm run build -- grpc-project
 
+# Expose the port the app runs in
+EXPOSE 8080 3000
+
 # Start the server using the production build
 CMD [ "node", "dist/apps/grpc-project/src/main.js" ]

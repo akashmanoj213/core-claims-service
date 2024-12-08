@@ -15,5 +15,7 @@ COPY . .
 # Creates a "dist" folder with the production build
 RUN npm run build -- claims-adjudication
 
+EXPOSE 8080
+
 # Start the server using the production build
 CMD [ "node", "dist/apps/claims-adjudication/src/main.js" ]
