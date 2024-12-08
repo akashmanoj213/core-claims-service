@@ -11,4 +11,4 @@ services:
   grpc-project:
     image: grpc-project:latest
     ports:
-      - "443:443"
+      - "3000:3000"

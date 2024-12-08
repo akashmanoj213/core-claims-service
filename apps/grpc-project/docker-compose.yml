@@ -6,4 +6,4 @@ services:
     image: 'grpc-project'
     ports:
       - "8080:8080"
-      - "443:443"
+      - "3000:3000"
