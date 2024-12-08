@@ -11,23 +11,36 @@ async function bootstrap() {
   // const otelSdk = initializeOtelSdk(serviceName);
   // otelSdk.start();
 
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    GrpcProjectModule,
-    {
-      transport: Transport.GRPC,
-      options: {
-        protoPath: join(__dirname, '../grpc-project.proto'),
-        package: GRPC_PROJECT_PACKAGE_NAME,
-      },
+  const app = await NestFactory.create(GrpcProjectModule);
+
+  // Create a gRPC microservice
+  const grpcApp = app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      protoPath: join(__dirname, '../grpc-project.proto'),
+      package: GRPC_PROJECT_PACKAGE_NAME,
     },
-  );
-
-  app.useLogger(app.get(WinstonLoggerService));
-  const app2 = await NestFactory.create(GrpcProjectModule, {
-    bufferLogs: true,
   });
+  app.useLogger(app.get(WinstonLoggerService));
 
-  await app.listen();
-  await app2.listen(8080);
+  await app.startAllMicroservices();
+  await app.listen(parseInt(process.env.PORT) || 8080);
+
+  // const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+  //   GrpcProjectModule,
+  //   {
+  //     transport: Transport.GRPC,
+  //     options: {
+  //       protoPath: join(__dirname, '../grpc-project.proto'),
+  //       package: GRPC_PROJECT_PACKAGE_NAME,
+  //     },
+  //   },
+  // );
+  // const app2 = await NestFactory.create(GrpcProjectModule, {
+  //   bufferLogs: true,
+  // });
+
+  // await app.listen();
+  // await app2.listen(8080);
 }
 bootstrap();

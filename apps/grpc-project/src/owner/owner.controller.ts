@@ -1,5 +1,4 @@
 import { Controller, Logger } from '@nestjs/common';
-import { Payload } from '@nestjs/microservices';
 import { OwnerService } from './owner.service';
 import {
   CreateOwnerDto,
