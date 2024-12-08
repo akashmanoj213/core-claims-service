@@ -27,6 +27,7 @@ export class OwnerController implements OwnerServiceController {
   }
 
   queryOwners(paginationStream: Observable<PaginationDto>): Observable<Owners> {
+    this.logger.log('queryOwners method called');
     return this.queryOwners(paginationStream);
   }
 }
