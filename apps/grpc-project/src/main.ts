@@ -7,9 +7,9 @@ import { initializeOtelSdk } from './instrumentation';
 import { WinstonLoggerService } from '@app/common-services';
 
 async function bootstrap() {
-  const serviceName = 'grpc-project'; // or any other service name
-  const otelSdk = initializeOtelSdk(serviceName);
-  otelSdk.start();
+  // const serviceName = 'grpc-project'; // or any other service name
+  // const otelSdk = initializeOtelSdk(serviceName);
+  // otelSdk.start();
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     GrpcProjectModule,
