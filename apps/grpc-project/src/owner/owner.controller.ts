@@ -16,18 +16,45 @@ export class OwnerController implements OwnerServiceController {
   private readonly logger = new Logger(OwnerController.name);
   constructor(private readonly ownerService: OwnerService) {}
 
-  createOwner(createOwnerDto: CreateOwnerDto) {
+  async createOwner(createOwnerDto: CreateOwnerDto) {
     this.logger.log('CreateOwner method called');
-    return this.ownerService.create(createOwnerDto);
+    try {
+      return await this.ownerService.create(createOwnerDto);
+    } catch (error) {
+      this.logger.error('Error in CreateOwner method', error.stack);
+      throw error;
+    }
   }
 
-  findAllOwners() {
+  async findAllOwners() {
     this.logger.log('FindAllOwners method called');
-    return this.ownerService.findAll();
+    try {
+      return await this.ownerService.findAll();
+    } catch (error) {
+      this.logger.error('Error in FindAllOwners method', error.stack);
+      throw error;
+    }
   }
 
   queryOwners(paginationStream: Observable<PaginationDto>): Observable<Owners> {
     this.logger.log('queryOwners method called');
-    return this.queryOwners(paginationStream);
+    return new Observable<Owners>((observer) => {
+      paginationStream.subscribe({
+        next: async (paginationDto) => {
+          try {
+            const owners = await this.ownerService.query(paginationDto);
+            observer.next(owners);
+          } catch (error) {
+            this.logger.error('Error in queryOwners method', error.stack);
+            observer.error(error);
+          }
+        },
+        error: (error) => {
+          this.logger.error('Error in paginationStream', error.stack);
+          observer.error(error);
+        },
+        complete: () => observer.complete(),
+      });
+    });
   }
 }

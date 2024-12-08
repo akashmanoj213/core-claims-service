@@ -9,18 +9,33 @@ export class OwnerController {
   constructor(private readonly ownerService: OwnerService) {}
 
   @Get()
-  findAll() {
-    this.logger.log('Finding all owners');
-    return this.ownerService.findAllOwners();
+  async findAll() {
+    try {
+      this.logger.log('Finding all owners');
+      return await this.ownerService.findAllOwners();
+    } catch (error) {
+      this.logger.error('Error finding all owners', error.stack);
+      throw error;
+    }
   }
 
   @Post('query-owners')
-  queryAllOwners() {
-    return this.ownerService.queryOwners();
+  async queryAllOwners() {
+    try {
+      return await this.ownerService.queryOwners();
+    } catch (error) {
+      this.logger.error('Error querying all owners', error.stack);
+      throw error;
+    }
   }
 
   @Post()
-  create(@Body() createOwnerDto: CreateOwnerDto) {
-    return this.ownerService.createOwner(createOwnerDto);
+  async create(@Body() createOwnerDto: CreateOwnerDto) {
+    try {
+      return await this.ownerService.createOwner(createOwnerDto);
+    } catch (error) {
+      this.logger.error('Error creating owner', error.stack);
+      throw error;
+    }
   }
 }
