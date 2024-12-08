@@ -15,7 +15,7 @@ import * as grpc from '@grpc/grpc-js';
         name: GRPC_SERVICE,
         transport: Transport.GRPC,
         options: {
-          url: 'dns://sahi-grpc-project-453999121690.asia-south1.run.app',
+          url: 'sahi-grpc-project-453999121690.asia-south1.run.app:443',
           package: GRPC_PROJECT_PACKAGE_NAME,
           protoPath: join(__dirname, '../grpc-project.proto'),
           credentials: grpc.credentials.createSsl(),
