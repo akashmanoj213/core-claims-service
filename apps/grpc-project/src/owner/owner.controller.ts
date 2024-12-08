@@ -37,24 +37,15 @@ export class OwnerController implements OwnerServiceController {
   }
 
   queryOwners(paginationStream: Observable<PaginationDto>): Observable<Owners> {
-    this.logger.log('queryOwners method called');
-    return new Observable<Owners>((observer) => {
-      paginationStream.subscribe({
-        next: async (paginationDto) => {
-          try {
-            const owners = await this.ownerService.query(paginationDto);
-            observer.next(owners);
-          } catch (error) {
-            this.logger.error('Error in queryOwners method', error.stack);
-            observer.error(error);
-          }
-        },
-        error: (error) => {
-          this.logger.error('Error in paginationStream', error.stack);
-          observer.error(error);
-        },
-        complete: () => observer.complete(),
-      });
-    });
+    this.logger.log('QueryOwners method called');
+    try {
+      return this.ownerService.queryOwners(paginationStream);
+    } catch (error) {
+      this.logger.error('Error in QueryOwners method', error.stack);
+      throw error;
+    }
   }
+  // queryOwners(paginationStream: Observable<PaginationDto>): Observable<Owners> {
+  //   return this.queryOwners(paginationStream);
+  // }
 }
