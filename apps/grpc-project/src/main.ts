@@ -19,7 +19,7 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, '../grpc-project.proto'),
       package: GRPC_PROJECT_PACKAGE_NAME,
-      url: `0.0.0.0:3000`,
+      url: `0.0.0.0:443`,
     },
   });
   app.useLogger(app.get(WinstonLoggerService));
