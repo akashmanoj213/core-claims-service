@@ -19,7 +19,7 @@ async function bootstrap() {
     options: {
       protoPath: join(__dirname, '../grpc-project.proto'),
       package: GRPC_PROJECT_PACKAGE_NAME,
-      url: `dns:///sahi-grpc-project-453999121690.asia-south1.run.app:3000`,
+      url: `dns:///0.0.0.0:3000`,
     },
   });
   app.useLogger(app.get(WinstonLoggerService));

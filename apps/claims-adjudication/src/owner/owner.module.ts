@@ -14,7 +14,7 @@ import { CommonServicesModule } from '@app/common-services';
         name: GRPC_SERVICE,
         transport: Transport.GRPC,
         options: {
-          url: 'dns:///sahi-grpc-project-453999121690.asia-south1.run.app:3000',
+          url: 'dns:///0.0.0.0:3000',
           package: GRPC_PROJECT_PACKAGE_NAME,
           protoPath: join(__dirname, '../grpc-project.proto'),
         },
