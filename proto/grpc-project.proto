@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package grpc_project;
+
+service OwnerService {
+    rpc CreateOwner(CreateOwnerDto) returns (Owner) {}
+    rpc FindAllOwners(Empty) returns (Owners) {}
+    rpc QueryOwners(stream PaginationDto) returns (stream Owners) {}
+}
+
+message PaginationDto {
+    int32 page = 1;
+    int32 skip = 2;
+}
+
+message Empty {}
+
+message Owners {
+    repeated Owner owners = 1; 
+}
+
+message CreateOwnerDto {
+    string username = 1;
+    string password = 2;
+    int32 age = 3;
+}
+
+message Owner {
+    string id = 1;
+    string username = 2;
+    string password = 3;
+    int32 age = 4;
+    bool subscribed = 5;
+    SocialMedia social_media = 6;
+}
+
+message SocialMedia {
+    string twitterUrl = 1;
+}

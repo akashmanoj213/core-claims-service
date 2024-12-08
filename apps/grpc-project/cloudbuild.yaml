@@ -1,0 +1,37 @@
+steps:
+  # Docker-compose build the image. Docker-compose file specifies root context to be able to copy common package.json file.
+  - name: docker
+    args: ['compose', '-f', 'apps/grpc-project/docker-compose.yml', 'build']
+  # Tag the image with a unique name
+  - name: 'docker'
+    args:
+      [
+        'tag',
+        'grpc-project',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/grpc-project:$COMMIT_SHA',
+      ]
+  # Push the container image to Container Registry (Make sure sahi folder is created)
+  - name: 'docker'
+    args:
+      [
+        'push',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/grpc-project:$COMMIT_SHA',
+      ]
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run',
+        'deploy',
+        'sahi-grpc-project',
+        '--image',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/grpc-project:$COMMIT_SHA',
+        '--region',
+        '$LOCATION',
+        '--allow-unauthenticated',
+        '--add-cloudsql-instances',
+        'pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
+      ]
+images:
+  - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/grpc-project:$COMMIT_SHA'

@@ -30,6 +30,12 @@
       "@app/common-services/*": [
         "libs/common-services/src/*"
       ],
+      "@app/common-library": [
+        "libs/common-library/src"
+      ],
+      "@app/common-library/*": [
+        "libs/common-library/src/*"
+      ],
       "@app/common-classes": [
         "libs/common-classes/src"
       ],

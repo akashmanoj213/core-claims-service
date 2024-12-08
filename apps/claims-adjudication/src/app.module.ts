@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { ClaimsAdjudicationModule } from './claims-adjudication/claims-adjudication.module';
+import { OwnerModule } from './owner/owner.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ClaimsAdjudicationModule } from './claims-adjudication/claims-adjudicat
       autoLoadEntities: true,
     }),
     ClaimsAdjudicationModule,
+    OwnerModule,
   ],
   controllers: [AppController],
   providers: [],

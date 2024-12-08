@@ -6,7 +6,7 @@ import { WinstonLoggerService } from '@app/common-services';
 import { initializeOtelSdk } from './instrumentation';
 
 async function bootstrap() {
-  const serviceName = 'cats-service'; // or any other service name
+  const serviceName = 'claims-adjudication'; // or any other service name
   const otelSdk = initializeOtelSdk(serviceName);
   otelSdk.start();
 
@@ -30,6 +30,7 @@ async function bootstrap() {
 
   app.enableCors();
 
+  console.log('PORT:', process.env.PORT);
   await app.listen(parseInt(process.env.PORT) || 8080);
 }
 bootstrap();

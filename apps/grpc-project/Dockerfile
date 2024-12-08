@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Creates a "dist" folder with the production build
-RUN npm run build -- claims-adjudication
+RUN npm run build -- grpc-project
 
 # Start the server using the production build
-CMD [ "node", "dist/apps/claims-adjudication/src/main.js" ]
+CMD [ "node", "dist/apps/grpc-project/src/main.js" ]

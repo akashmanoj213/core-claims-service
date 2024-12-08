@@ -6,7 +6,7 @@ import { WinstonLoggerService } from '@app/common-services';
 import { initializeOtelSdk } from './instrumentation';
 
 async function bootstrap() {
-  const serviceName = 'cats-service'; // or any other service name
+  const serviceName = 'claims-settlement'; // or any other service name
   const otelSdk = initializeOtelSdk(serviceName);
   otelSdk.start();
 

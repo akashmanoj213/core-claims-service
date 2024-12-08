@@ -22,10 +22,12 @@
     "claims-adjudication": {
       "type": "application",
       "root": "apps/claims-adjudication",
-      "entryFile": "main",
-      "sourceRoot": "apps/claims-adjudication/src",
+      "entryFile": "src/main",
+      "sourceRoot": "./",
       "compilerOptions": {
-        "tsConfigPath": "apps/claims-adjudication/tsconfig.app.json"
+        "tsConfigPath": "apps/claims-adjudication/tsconfig.app.json",
+        "assets": ["proto/*.proto"],
+        "watchAssets": true
       }
     },
     "common-dto": {
@@ -71,6 +73,17 @@
       "sourceRoot": "libs/common-services/winston-logger/src",
       "compilerOptions": {
         "tsConfigPath": "libs/common-services/winston-logger/tsconfig.lib.json"
+      }
+    },
+    "grpc-project": {
+      "type": "application",
+      "root": "apps/grpc-project",
+      "entryFile": "src/main",
+      "sourceRoot": "./",
+      "compilerOptions": {
+        "tsConfigPath": "apps/grpc-project/tsconfig.app.json",
+        "assets": ["proto/*.proto"],
+        "watchAssets": true
       }
     }
   }

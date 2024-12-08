@@ -1,0 +1,6 @@
+services:
+  grpc-project:
+    build:
+      context: ../../
+      dockerfile: ./apps/grpc-project/Dockerfile
+    image: 'grpc-project'
