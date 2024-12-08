@@ -11,6 +11,7 @@ import {
   ExpressInstrumentation,
   ExpressLayerType,
 } from '@opentelemetry/instrumentation-express';
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
 export function initializeOtelSdk(serviceName: string) {
   const otelSdk = new NodeSDK({
@@ -19,16 +20,17 @@ export function initializeOtelSdk(serviceName: string) {
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
     traceExporter: new ConsoleSpanExporter(),
-    instrumentations: [
-      new HttpInstrumentation(),
-      new ExpressInstrumentation({
-        ignoreLayersType: [
-          ExpressLayerType.MIDDLEWARE,
-          ExpressLayerType.ROUTER,
-          ExpressLayerType.REQUEST_HANDLER,
-        ],
-      }),
-    ],
+    instrumentations: [getNodeAutoInstrumentations()],
+    // instrumentations: [
+    //   new HttpInstrumentation(),
+    //   new ExpressInstrumentation({
+    //     ignoreLayersType: [
+    //       ExpressLayerType.MIDDLEWARE,
+    //       ExpressLayerType.ROUTER,
+    //       ExpressLayerType.REQUEST_HANDLER,
+    //     ],
+    //   }),
+    // ],
   });
 
   process.on('SIGTERM', () => {
