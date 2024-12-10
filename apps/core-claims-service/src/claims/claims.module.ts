@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { ClaimsService } from './claims.service';
 import { ClaimsController } from './claims.controller';
 import { TypeOrmModule } from '@nestjs/typeorm/dist/typeorm.module';
@@ -66,6 +66,6 @@ export const CommandHandlers = [CreateClaimCommandHandler];
     CommonServicesModule,
   ],
   controllers: [ClaimsController],
-  providers: [ClaimsService, ...CommandHandlers],
+  providers: [Logger, ClaimsService, ...CommandHandlers],
 })
 export class ClaimsModule {}

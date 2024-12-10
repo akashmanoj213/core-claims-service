@@ -5,7 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { initializeOtelSdk } from './instrumentation';
 import { WinstonModule } from 'nest-winston';
-import { createLogger } from 'winston';
+import * as winston from 'winston';
 
 async function bootstrap() {
   const serviceName = 'claims-adjudication'; // or any other service name
@@ -15,8 +15,8 @@ async function bootstrap() {
   // const app = await NestFactory.create(AppModule, { bufferLogs: true });
   // app.useLogger(app.get(Logger));
 
-  const instance = createLogger({
-    // options of Winston
+  const instance = winston.createLogger({
+    transports: new winston.transports.Console(),
   });
 
   const app = await NestFactory.create(AppModule, {
