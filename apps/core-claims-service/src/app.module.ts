@@ -1,10 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ClaimsModule } from './claims/claims.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { LoggerModule } from 'nestjs-pino';
-import { createGcpLoggingPinoConfig } from '@google-cloud/pino-logging-gcp-config';
 
 @Module({
   imports: [
@@ -22,6 +20,6 @@ import { createGcpLoggingPinoConfig } from '@google-cloud/pino-logging-gcp-confi
     ClaimsModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [Logger],
 })
 export class AppModule {}
