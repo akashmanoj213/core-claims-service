@@ -11,8 +11,7 @@ import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 
 async function bootstrap() {
   const serviceName = 'claims-adjudication'; // or any other service name
-  const otelSdk = initializeOtelSdk(serviceName);
-  otelSdk.start();
+  initializeOtelSdk(serviceName);
 
   // const app = await NestFactory.create(AppModule, { bufferLogs: true });
   // app.useLogger(app.get(Logger));
