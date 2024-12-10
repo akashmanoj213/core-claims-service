@@ -7,6 +7,7 @@ import { initializeOtelSdk } from './instrumentation';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { LoggingWinston } from '@google-cloud/logging-winston';
+import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 
 async function bootstrap() {
   const serviceName = 'claims-adjudication'; // or any other service name
@@ -20,8 +21,8 @@ async function bootstrap() {
   const instance = winston.createLogger({
     transports:
       process.env.NODE_ENV === 'local'
-        ? [new winston.transports.Console()]
-        : [loggingWinston],
+        ? [new winston.transports.Console(), new OpenTelemetryTransportV3()]
+        : [loggingWinston, new OpenTelemetryTransportV3()],
   });
 
   const app = await NestFactory.create(AppModule, {
