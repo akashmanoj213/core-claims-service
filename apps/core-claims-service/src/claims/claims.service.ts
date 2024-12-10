@@ -39,8 +39,6 @@ import { ICD10Level1 } from './entities/icd-10-level1.entity';
 
 @Injectable()
 export class ClaimsService {
-  private readonly logger = new Logger(ClaimsService.name);
-
   constructor(
     @InjectRepository(Claim)
     private claimRepository: Repository<Claim>,
@@ -56,6 +54,7 @@ export class ClaimsService {
     private medicalBillDetailsRepository: Repository<MedicalBillDetails>,
     private fileUploadService: FileUploadService,
     private httpService: HttpService,
+    private readonly logger: Logger,
   ) {}
 
   async initiateAndVerifyClaim(claim: Claim) {

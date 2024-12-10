@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@google-cloud/logging-winston": "^6.0.0",
+    "@google-cloud/pino-logging-gcp-config": "^1.0.2",
     "@google-cloud/pubsub": "^4.0.0",
     "@grpc/grpc-js": "^1.12.4",
     "@grpc/proto-loader": "^0.7.13",
@@ -54,6 +55,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "joi": "^17.9.2",
+    "nest-winston": "^1.9.7",
     "nestjs-pino": "^3.5.0",
     "pg": "^8.11.2",
     "pino-http": "^8.6.1",

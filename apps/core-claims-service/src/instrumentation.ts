@@ -1,5 +1,5 @@
 /*instrumentation.ts*/
-import { NodeSDK } from '@opentelemetry/sdk-node';
+import { logs, NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import { Resource } from '@opentelemetry/resources';
 import {
@@ -7,7 +7,8 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
-import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
+import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
+import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 
 export function initializeOtelSdk(serviceName: string) {
   // const otelSdk = new NodeSDK({
@@ -34,7 +35,14 @@ export function initializeOtelSdk(serviceName: string) {
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
     traceExporter: new ConsoleSpanExporter(),
-    instrumentations: [new HttpInstrumentation(), new PinoInstrumentation()],
+    logRecordProcessor: new logs.SimpleLogRecordProcessor(
+      new logs.ConsoleLogRecordExporter(),
+    ),
+    instrumentations: [
+      new NestInstrumentation(),
+      new HttpInstrumentation(),
+      new WinstonInstrumentation(),
+    ],
   });
 
   process.on('SIGTERM', () => {

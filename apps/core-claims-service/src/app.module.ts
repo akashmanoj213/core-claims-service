@@ -4,20 +4,10 @@ import { ClaimsModule } from './claims/claims.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
+import { createGcpLoggingPinoConfig } from '@google-cloud/pino-logging-gcp-config';
 
 @Module({
   imports: [
-    LoggerModule.forRootAsync({
-      useFactory: () => ({
-        pinoHttp: {
-          level: process.env.LOG_LEVEL || 'info',
-          transport:
-            process.env.NODE_ENV !== 'production'
-              ? { target: 'pino-pretty' }
-              : undefined,
-        },
-      }),
-    }),
     ConfigModule.forRoot({ envFilePath: 'apps/core-claims-service/.env' }),
     TypeOrmModule.forRoot({
       type: 'postgres',

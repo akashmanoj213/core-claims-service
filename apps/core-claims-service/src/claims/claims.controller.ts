@@ -60,13 +60,13 @@ export class ClaimsController {
   private readonly PAS_CLAIM_SYNC_TOPIC = 'pas-claim-sync';
   private readonly INSTANT_CASHLESS_CLAIM_INITIATED_TOPIC =
     'instant-cashless-claim-initiated';
-  private readonly logger = new Logger(ClaimsController.name);
 
   constructor(
     private readonly claimsService: ClaimsService,
     private pubSubService: PubSubService,
     private notificationService: NotificationService,
     private readonly commandBus: CommandBus,
+    private readonly logger: Logger,
   ) {}
 
   @Post()

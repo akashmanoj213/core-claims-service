@@ -4,15 +4,26 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
 import { initializeOtelSdk } from './instrumentation';
+import { WinstonModule } from 'nest-winston';
+import { createLogger } from 'winston';
 
 async function bootstrap() {
   const serviceName = 'claims-adjudication'; // or any other service name
   const otelSdk = initializeOtelSdk(serviceName);
   otelSdk.start();
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // app.useLogger(app.get(Logger));
 
-  app.useLogger(app.get(Logger));
+  const instance = createLogger({
+    // options of Winston
+  });
+
+  const app = await NestFactory.create(AppModule, {
+    logger: WinstonModule.createLogger({
+      instance,
+    }),
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Core Claims APIs')
