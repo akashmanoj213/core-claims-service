@@ -1,28 +1,13 @@
 /*instrumentation.ts*/
-import { api, logs, NodeSDK } from '@opentelemetry/sdk-node';
-import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
-import {
-  detectResourcesSync,
-  envDetectorSync,
-  hostDetectorSync,
-  processDetectorSync,
-  Resource,
-} from '@opentelemetry/resources';
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from '@opentelemetry/semantic-conventions';
-import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
-import { NestInstrumentation } from '@opentelemetry/instrumentation-nestjs-core';
 import {
-  BatchLogRecordProcessor,
   ConsoleLogRecordExporter,
   LoggerProvider,
   SimpleLogRecordProcessor,
 } from '@opentelemetry/sdk-logs';
 import * as logsAPI from '@opentelemetry/api-logs';
-import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
 
 export function initializeOtelSdk(serviceName: string) {
   // const otelSdk = new NodeSDK({
@@ -59,20 +44,24 @@ export function initializeOtelSdk(serviceName: string) {
   //   ],
   // });
 
-  const logExporter = new OTLPLogExporter();
-  const loggerProvider = new LoggerProvider({
-    // without resource we don't have proper service.name, service.version correlated with logs
-    resource: detectResourcesSync({
-      // this have to be manually adjusted to match SDK OTEL_NODE_RESOURCE_DETECTORS
-      detectors: [envDetectorSync, processDetectorSync, hostDetectorSync],
-    }),
-  });
+  const tracerProvider = new NodeTracerProvider();
+  tracerProvider.register();
 
+  // To start a logger, you first need to initialize the Logger provider.
+  const loggerProvider = new LoggerProvider();
+  // Add a processor to export log record
   loggerProvider.addLogRecordProcessor(
-    new BatchLogRecordProcessor(logExporter),
-    // new SimpleLogRecordProcessor(new ConsoleLogRecordExporter())
+    new SimpleLogRecordProcessor(new ConsoleLogRecordExporter()),
   );
   logsAPI.logs.setGlobalLoggerProvider(loggerProvider);
+
+  registerInstrumentations({
+    instrumentations: [
+      new WinstonInstrumentation({
+        // See below for Winston instrumentation options.
+      }),
+    ],
+  });
 
   // process.on('SIGTERM', () => {
   //   otelSdk
