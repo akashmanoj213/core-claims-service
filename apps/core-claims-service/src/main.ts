@@ -16,9 +16,12 @@ async function bootstrap() {
   // const app = await NestFactory.create(AppModule, { bufferLogs: true });
   // app.useLogger(app.get(Logger));
 
-  // const loggingWinston = new LoggingWinston();
+  const loggingWinston = new LoggingWinston();
   const instance = winston.createLogger({
-    transports: [new winston.transports.Console()],
+    transports:
+      process.env.NODE_ENV === 'local'
+        ? [new winston.transports.Console()]
+        : [loggingWinston],
   });
 
   const app = await NestFactory.create(AppModule, {
