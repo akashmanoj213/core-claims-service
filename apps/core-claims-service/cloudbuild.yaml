@@ -27,8 +27,6 @@ steps:
             '--set-env-vars', 'OTEL_LOGS_EXPORTER=otlp',
             '--set-env-vars', 'OTEL_METRICS_EXPORTER=otlp',
             '--set-env-vars', 'OTEL_TRACES_EXPORTER=otlp',
-            '--set-env-vars', 'OTEL_NODE_RESOURCE_DETECTORS=env\,host\,os',
-            '--set-env-vars', 'OTEL_NODE_ENABLED_INSTRUMENTATIONS=http\,express\,winston'
 ]
 
 images:

@@ -12,6 +12,9 @@ RUN npm install
 # Copy files
 COPY . .
 
+ENV OTEL_NODE_RESOURCE_DETECTORS=env,host,os
+ENV OTEL_NODE_ENABLED_INSTRUMENTATIONS=http,express,winston
+
 # Creates a "dist" folder with the production build
 RUN npm run build -- core-claims-service
 
