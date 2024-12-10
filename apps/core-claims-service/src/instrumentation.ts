@@ -8,6 +8,8 @@ import {
 } from '@opentelemetry/sdk-logs';
 import * as logsAPI from '@opentelemetry/api-logs';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 
 export function initializeOtelSdk(serviceName: string) {
   // const otelSdk = new NodeSDK({
@@ -57,9 +59,9 @@ export function initializeOtelSdk(serviceName: string) {
 
   registerInstrumentations({
     instrumentations: [
-      new WinstonInstrumentation({
-        // See below for Winston instrumentation options.
-      }),
+      new ExpressInstrumentation(),
+      new HttpInstrumentation(),
+      new WinstonInstrumentation(),
     ],
   });
 
