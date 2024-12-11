@@ -25,8 +25,9 @@ import { GoogleCloudLoggingMiddleware } from './winston-logger.middleware';
   controllers: [AppController],
   providers: [GoogleCloudLoggingMiddleware],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(GoogleCloudLoggingMiddleware).forRoutes('*');
-  }
-}
+// export class AppModule implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer.apply(GoogleCloudLoggingMiddleware).forRoutes('*');
+//   }
+// }
+export class AppModule {}

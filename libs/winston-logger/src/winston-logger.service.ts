@@ -1,3 +1,4 @@
+import { LoggingWinston } from '@google-cloud/logging-winston';
 import { Injectable, LoggerService } from '@nestjs/common';
 import * as winston from 'winston';
 
@@ -6,10 +7,13 @@ export class WinstonLoggerService implements LoggerService {
   private readonly logger: winston.Logger;
 
   constructor() {
-    // const loggingWinston = new LoggingWinston();
+    const loggingWinston = new LoggingWinston();
     this.logger = winston.createLogger({
       level: 'info',
-      transports: [new winston.transports.Console()],
+      transports:
+        process.env.NODE_ENV === 'local'
+          ? [new winston.transports.Console()]
+          : [loggingWinston],
     });
   }
 
