@@ -22,7 +22,6 @@
     "test:e2e": "jest --config ./apps/core-claims-service/test/jest-e2e.json"
   },
   "dependencies": {
-    "@google-cloud/opentelemetry-cloud-trace-exporter": "^2.4.1",
     "@google-cloud/pubsub": "^4.0.0",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "^10.0.0",

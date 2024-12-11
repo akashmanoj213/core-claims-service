@@ -16,18 +16,10 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
-import {
-  BatchSpanProcessor,
-  ConsoleSpanExporter,
-} from '@opentelemetry/sdk-trace-node';
-import { TraceExporter } from '@google-cloud/opentelemetry-cloud-trace-exporter';
+import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 
 export function initializeOtelSdk(serviceName: string) {
   diag.setLogger(new DiagConsoleLogger(), core.getEnv().OTEL_LOG_LEVEL);
-  const exporter = new TraceExporter({
-    // If you are not in a GCP environment, you will need to provide your
-    // service account key here. See the Authentication section below.
-  });
 
   const otelSdk = new NodeSDK({
     resourceDetectors: getResourceDetectors(),
@@ -35,7 +27,7 @@ export function initializeOtelSdk(serviceName: string) {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
-    spanProcessors: [new BatchSpanProcessor(exporter)],
+    traceExporter: new tracing.InMemorySpanExporter(),
     // spanProcessor: new tracing.BatchSpanProcessor(
     //   new tracing.ConsoleSpanExporter(),
     // ),
