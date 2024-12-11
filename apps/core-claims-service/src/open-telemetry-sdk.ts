@@ -17,24 +17,29 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
 
 export function initializeOtelSdk(serviceName: string) {
   diag.setLogger(new DiagConsoleLogger(), core.getEnv().OTEL_LOG_LEVEL);
 
   const otelSdk = new NodeSDK({
-    resourceDetectors: getResourceDetectors(),
     resource: new Resource({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
-    traceExporter: new tracing.InMemorySpanExporter(),
+    // traceExporter: new tracing.InMemorySpanExporter(),
     // spanProcessor: new tracing.BatchSpanProcessor(
     //   new tracing.ConsoleSpanExporter(),
     // ),
     // logRecordProcessors: [
     //   new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
     // ],
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [
+      new HttpInstrumentation(),
+      new ExpressInstrumentation(),
+      new WinstonInstrumentation(),
+    ],
   });
 
   try {

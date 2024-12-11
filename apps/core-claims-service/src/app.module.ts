@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { ClaimsModule } from './claims/claims.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { WinstonLoggerModule } from '@app/winston-logger';
+import { GoogleCloudLoggingMiddleware } from './winston-logger.middleware';
 
 @Module({
   imports: [
@@ -22,6 +23,10 @@ import { WinstonLoggerModule } from '@app/winston-logger';
     WinstonLoggerModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [GoogleCloudLoggingMiddleware],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(GoogleCloudLoggingMiddleware).forRoutes('*');
+  }
+}

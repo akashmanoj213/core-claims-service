@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WinstonLoggerService } from '@app/winston-logger';
+import { GoogleCloudLoggingMiddleware } from './winston-logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -28,6 +29,9 @@ async function bootstrap() {
   );
 
   app.enableCors();
+
+  // Apply the Google Cloud Logging middleware
+  app.use(app.get(GoogleCloudLoggingMiddleware).use);
 
   await app.listen(parseInt(process.env.PORT) || 8080);
 }
