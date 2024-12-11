@@ -53,6 +53,8 @@ steps:
         'OTEL_TRACES_EXPORTER=none',
         '--set-env-vars',
         'OTEL_METRICS_EXPORTER=none',
+        '--set-env-vars',
+        'OTEL_LOGS_EXPORTER=none',
       ]
 
 images:
