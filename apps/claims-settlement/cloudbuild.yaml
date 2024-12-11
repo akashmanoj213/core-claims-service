@@ -1,27 +1,57 @@
 steps:
-# Docker-compose build the image. Docker-compose file specifies root context to be able to copy common package.json file.
+  # Docker-compose build the image. Docker-compose file specifies root context to be able to copy common package.json file.
   - name: docker
-    args: ['compose', '-f', 'apps/claims-settlement/docker-compose.yml', 'build']
-# Tag the image with a unique name
+    args:
+      ['compose', '-f', 'apps/claims-settlement/docker-compose.yml', 'build']
+  # Tag the image with a unique name
   - name: 'docker'
-    args: ['tag',
-      'claims-settlement',
-      '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA']
-# Push the container image to Container Registry (Make sure sahi folder is created)
+    args:
+      [
+        'tag',
+        'claims-settlement',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA',
+      ]
+  # Push the container image to Container Registry (Make sure sahi folder is created)
   - name: 'docker'
-    args: ['push', '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA']
-# Deploy container image to Cloud Run
+    args:
+      [
+        'push',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA',
+      ]
+  # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
-    args: ['run', 'deploy', 'sahi-claims-settlement', '--image', '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA', '--region', '$LOCATION', '--allow-unauthenticated',
-            '--add-cloudsql-instances', 'pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
-            '--set-env-vars', 'DB_NAME=Claims-Settlement',
-            '--set-env-vars', 'DB_USERNAME=sahi-db-user',
-            '--set-env-vars', 'DB_PASSWORD=qwerty',
-            '--set-env-vars', 'DB_HOST=35.244.10.243',
-            '--set-env-vars', 'DB_PORT=5432',
-            '--set-env-vars', 'MOCK_SERVICE_BASE_URL=https://mock-service-dnhiaxv6nq-el.a.run.app',
-            '--set-env-vars', 'SMS_ENABLE=true',
-            '--set-env-vars', 'FILE_UPLOAD_ENABLE=true']
+    args:
+      [
+        'run',
+        'deploy',
+        'sahi-claims-settlement',
+        '--image',
+        '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA',
+        '--region',
+        '$LOCATION',
+        '--allow-unauthenticated',
+        '--add-cloudsql-instances',
+        'pruinhlth-nprd-dev-scxlyx-7250:asia-south1:sahi-dev',
+        '--set-env-vars',
+        'DB_NAME=Claims-Settlement',
+        '--set-env-vars',
+        'DB_USERNAME=sahi-db-user',
+        '--set-env-vars',
+        'DB_PASSWORD=qwerty',
+        '--set-env-vars',
+        'DB_HOST=35.244.10.243',
+        '--set-env-vars',
+        'DB_PORT=5432',
+        '--set-env-vars',
+        'MOCK_SERVICE_BASE_URL=https://mock-service-dnhiaxv6nq-el.a.run.app',
+        '--set-env-vars',
+        'SMS_ENABLE=true',
+        '--set-env-vars',
+        'FILE_UPLOAD_ENABLE=true',
+        '--set-env-vars',
+        'OTEL_LOGS_EXPORTER=none',
+      ]
+
 images:
   - '$LOCATION-docker.pkg.dev/$PROJECT_ID/sahi/claims-settlement:$COMMIT_SHA'
