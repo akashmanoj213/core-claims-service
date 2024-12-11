@@ -6,6 +6,7 @@ import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
 import {
   ConsoleLogRecordExporter,
   BatchLogRecordProcessor,
+  InMemoryLogRecordExporter,
 } from '@opentelemetry/sdk-logs';
 import {
   getNodeAutoInstrumentations,
@@ -28,13 +29,13 @@ export function initializeOtelSdk(serviceName: string) {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
-    // traceExporter: new tracing.InMemorySpanExporter(),
-    spanProcessor: new tracing.BatchSpanProcessor(
-      new tracing.ConsoleSpanExporter(),
-    ),
-    // logRecordProcessors: [
-    //   new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
-    // ],
+    traceExporter: new tracing.InMemorySpanExporter(),
+    // spanProcessor: new tracing.BatchSpanProcessor(
+    //   new tracing.ConsoleSpanExporter(),
+    // ),
+    logRecordProcessors: [
+      new BatchLogRecordProcessor(new InMemoryLogRecordExporter()),
+    ],
     instrumentations: [getNodeAutoInstrumentations()],
   });
 
