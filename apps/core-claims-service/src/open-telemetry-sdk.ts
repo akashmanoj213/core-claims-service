@@ -30,9 +30,9 @@ export function initializeOtelSdk(serviceName: string) {
     // spanProcessor: new tracing.BatchSpanProcessor(
     //   new tracing.ConsoleSpanExporter(),
     // ),
-    logRecordProcessors: [
-      new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
-    ],
+    // logRecordProcessors: [
+    //   new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
+    // ],
     instrumentations: [getNodeAutoInstrumentations()],
   });
 
