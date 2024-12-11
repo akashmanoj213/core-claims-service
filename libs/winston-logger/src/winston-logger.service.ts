@@ -1,6 +1,7 @@
 import { LoggingWinston } from '@google-cloud/logging-winston';
 import { Injectable, LoggerService } from '@nestjs/common';
 import * as winston from 'winston';
+import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
 
 @Injectable()
 export class WinstonLoggerService implements LoggerService {
@@ -13,7 +14,7 @@ export class WinstonLoggerService implements LoggerService {
       transports:
         process.env.NODE_ENV === 'local'
           ? [new winston.transports.Console()]
-          : [loggingWinston],
+          : [new OpenTelemetryTransportV3()],
     });
   }
 

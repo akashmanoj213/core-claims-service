@@ -50,11 +50,11 @@ steps:
         '--set-env-vars',
         'FILE_UPLOAD_ENABLE=true',
         '--set-env-vars',
-        'OTEL_TRACES_EXPORTER=none',
+        'OTEL_TRACES_EXPORTER=oltp',
         '--set-env-vars',
-        'OTEL_METRICS_EXPORTER=none',
+        'OTEL_METRICS_EXPORTER=oltp',
         '--set-env-vars',
-        'OTEL_LOGS_EXPORTER=none',
+        'OTEL_LOGS_EXPORTER=oltp',
       ]
 
 images:
