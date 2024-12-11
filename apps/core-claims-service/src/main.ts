@@ -30,9 +30,6 @@ async function bootstrap() {
 
   app.enableCors();
 
-  // Apply the Google Cloud Logging middleware
-  app.use(app.get(GoogleCloudLoggingMiddleware).use);
-
   await app.listen(parseInt(process.env.PORT) || 8080);
 }
 bootstrap();
