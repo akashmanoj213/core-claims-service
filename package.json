@@ -32,6 +32,8 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.1.11",
     "@nestjs/typeorm": "^10.0.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.54.0",
     "axios": "^1.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -40,6 +42,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
+    "winston": "^3.17.0",
     "zeebe-node": "^8.2.5"
   },
   "devDependencies": {
@@ -89,7 +92,8 @@
     "moduleNameMapper": {
       "^@app/common-dto(|/.*)$": "<rootDir>/libs/common-dto/src/$1",
       "^@app/common-library(|/.*)$": "<rootDir>/libs/common-library/src/$1",
-      "^@app/common-classes(|/.*)$": "<rootDir>/libs/common-classes/src/$1"
+      "^@app/common-classes(|/.*)$": "<rootDir>/libs/common-classes/src/$1",
+      "^@app/winston-logger(|/.*)$": "<rootDir>/libs/winston-logger/src/$1"
     }
   }
 }

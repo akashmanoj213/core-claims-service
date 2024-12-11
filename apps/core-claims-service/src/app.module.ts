@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { ClaimsModule } from './claims/claims.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { WinstonLoggerModule } from '@app/winston-logger';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ConfigModule } from '@nestjs/config';
       autoLoadEntities: true,
     }),
     ClaimsModule,
+    WinstonLoggerModule,
   ],
   controllers: [AppController],
   providers: [],

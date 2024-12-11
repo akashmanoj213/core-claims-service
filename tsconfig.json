@@ -35,6 +35,12 @@
       ],
       "@app/common-classes/*": [
         "libs/common-classes/src/*"
+      ],
+      "@app/winston-logger": [
+        "libs/winston-logger/src"
+      ],
+      "@app/winston-logger/*": [
+        "libs/winston-logger/src/*"
       ]
     }
   }
