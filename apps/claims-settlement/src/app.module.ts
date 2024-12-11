@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.module';
+import { LoggerModule } from 'nestjs-pino';
+import { loggerConfig } from './logger.config';
 
 @Module({
   imports: [
@@ -19,6 +21,9 @@ import { ClaimsSettlementModule } from './claims-settlement/claims-settlement.mo
       autoLoadEntities: true,
     }),
     ClaimsSettlementModule,
+    LoggerModule.forRoot({
+      pinoHttp: loggerConfig,
+    }),
   ],
   controllers: [AppController],
   providers: [],

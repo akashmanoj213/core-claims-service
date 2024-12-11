@@ -41,6 +41,12 @@
       ],
       "@app/winston-logger/*": [
         "libs/winston-logger/src/*"
+      ],
+      "@app/pino-logger": [
+        "libs/pino-logger/src"
+      ],
+      "@app/pino-logger/*": [
+        "libs/pino-logger/src/*"
       ]
     }
   }

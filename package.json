@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:debug:claims-adjudication": "nest start --debug --watch claims-adjudication",
-    "start:debug:claims-settlement": "nest start --debug --watch claims-settlement",
+    "start:debug:claims-settlement": "nest start --debug --watch claims-settlement | pino-pretty",
     "start:prod": "node dist/apps/core-claims-service/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -49,7 +49,10 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "joi": "^17.9.2",
+    "nestjs-pino": "^4.1.0",
     "pg": "^8.11.2",
+    "pino-http": "^10.3.0",
+    "pino-pretty": "^13.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
@@ -104,7 +107,8 @@
       "^@app/common-dto(|/.*)$": "<rootDir>/libs/common-dto/src/$1",
       "^@app/common-library(|/.*)$": "<rootDir>/libs/common-library/src/$1",
       "^@app/common-classes(|/.*)$": "<rootDir>/libs/common-classes/src/$1",
-      "^@app/winston-logger(|/.*)$": "<rootDir>/libs/winston-logger/src/$1"
+      "^@app/winston-logger(|/.*)$": "<rootDir>/libs/winston-logger/src/$1",
+      "^@app/pino-logger(|/.*)$": "<rootDir>/libs/pino-logger/src/$1"
     }
   }
 }

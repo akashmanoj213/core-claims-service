@@ -72,6 +72,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/winston-logger/tsconfig.lib.json"
       }
+    },
+    "pino-logger": {
+      "type": "library",
+      "root": "libs/pino-logger",
+      "entryFile": "index",
+      "sourceRoot": "libs/pino-logger/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/pino-logger/tsconfig.lib.json"
+      }
     }
   }
 }

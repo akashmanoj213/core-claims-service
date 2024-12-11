@@ -1,10 +1,15 @@
+import { initializeOtelSdk } from './open-telemetry-sdk';
+initializeOtelSdk('claims-settlement');
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
 
   const config = new DocumentBuilder()
     .setTitle('Claims Settlement APIs')

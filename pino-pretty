@@ -1,0 +1,33 @@
+
+> core-claims-service@0.0.1 start:debug:claims-settlement
+> nest start --debug --watch claims-settlement
+
+
+ Info  Webpack is building your sources...
+
+webpack 5.97.1 compiled [1m[32msuccessfully[39m[22m in 1003 ms
+Type-checking in progress...
+OTEL_LOGS_EXPORTER is empty. Using default otlp exporter.
+OpenTelemetry automatic instrumentation started successfully
+No errors found.
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.406Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"NestFactory","message":"Starting Nest application..."}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"TypeOrmModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"HttpModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"AppModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"ConfigHostModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"LoggerModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"CommonServicesModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"ConfigModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.407Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"TypeOrmCoreModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"TypeOrmModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"InstanceLoader","message":"ClaimsSettlementModule dependencies initialized"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RoutesResolver","message":"AppController {/}:"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/, GET} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RoutesResolver","message":"ClaimsSettlementController {/claims-settlement}:"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement/claim-approved-handler, POST} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement/claim-rejected-handler, POST} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement/cashless-claim-payment-completed-handler, POST} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement/test, GET} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement/:id, GET} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"RouterExplorer","message":"Mapped {/claims-settlement, GET} route"}
+{"severity":"INFO","timestamp":"2024-12-11T10:28:27.408Z","pid":66627,"hostname":"MPTSIDGH0XM7KVP","context":"NestApplication","message":"Nest application successfully started"}
