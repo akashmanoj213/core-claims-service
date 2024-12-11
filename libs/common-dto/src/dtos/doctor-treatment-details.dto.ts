@@ -12,7 +12,7 @@ export enum LineOfTreatment {
   MEDICAL_MANAGEMENT = 'Medical Management',
   SURGICAL_MANAGEMENT = 'Surgical Management',
   INTENSIVE_CARE = 'Intensive Care',
-  INVESTIGATION = 'Investigatoin',
+  INVESTIGATION = 'Investigation',
   NONALLOPATHICTREATMENT = 'Non-Allopathic treatment',
 }
 
