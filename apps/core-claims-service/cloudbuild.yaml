@@ -49,6 +49,10 @@ steps:
         'SMS_ENABLE=false',
         '--set-env-vars',
         'FILE_UPLOAD_ENABLE=true',
+        '--set-env-vars',
+        'OTEL_TRACES_EXPORTER=none',
+        '--set-env-vars',
+        'OTEL_METRICS_EXPORTER=none',
       ]
 
 images:
