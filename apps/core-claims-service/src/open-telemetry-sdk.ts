@@ -28,13 +28,13 @@ export function initializeOtelSdk(serviceName: string) {
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: '1.0',
     }),
-    traceExporter: new tracing.InMemorySpanExporter(),
+    // traceExporter: new tracing.InMemorySpanExporter(),
     // spanProcessor: new tracing.BatchSpanProcessor(
     //   new tracing.ConsoleSpanExporter(),
     // ),
-    // logRecordProcessors: [
-    //   new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
-    // ],
+    logRecordProcessors: [
+      new BatchLogRecordProcessor(new ConsoleLogRecordExporter()),
+    ],
     instrumentations: [
       new HttpInstrumentation(),
       new ExpressInstrumentation(),
