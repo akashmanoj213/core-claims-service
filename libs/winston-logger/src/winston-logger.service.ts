@@ -14,7 +14,7 @@ export class WinstonLoggerService implements LoggerService {
       transports:
         process.env.NODE_ENV === 'local'
           ? [new winston.transports.Console()]
-          : [new OpenTelemetryTransportV3()],
+          : [new OpenTelemetryTransportV3(), loggingWinston],
     });
   }
 
